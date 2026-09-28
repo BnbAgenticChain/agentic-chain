@@ -31,7 +31,7 @@
 |---|---|---|---|
 | `anchor_root` | 链上每一个 `AnchorPosted` 里的 `exitRoot` / `l2Block` / `l2BlockHash` / `exitCreditsInEpoch` / `creditedInEpoch` | **不读中继的数据库、不读它的日志、不 import 它的代码**：自己从层内 `ExitBurned` + `CreditsMinted` 重新聚合，用自己那份 merkle 实现算根 | **会** |
 | `reconcile` | 层内 vs BSC 的对账恒等式（`03-INTERFACES.md` §3.1 的 `diff`） | 五个链上读数自己拉，公式与网站上公开的那条逐字一致 | **只在 `diff < 0`（超发方向）会** |
-| `buckets` | `lockedBac` / `buybackBac` 两个桶 vs BAC 代币的真实余额，以及两个桶的逐笔增量 | 结构性不等式 + 事件溯源的增量对账，不依赖任何人报的数 | **会** |
+| `buckets` | `lockedBac` / `buybackBac` 两个桶 vs AGNT 代币的真实余额，以及两个桶的逐笔增量 | 结构性不等式 + 事件溯源的增量对账，不依赖任何人报的数 | **会** |
 | `buyback` | 每一笔 `BoughtBack` 的单次上限与滑点 | 在**交易前一个区块**独立再读一次参考价，用没被这笔交易影响过的价格复算 | **会**（上下限永远能判；滑点那一项需要归档节点，读不到就跳过） |
 | `release_cap` | 每一笔 `settleEpoch` 的 `pot`，以及滚动 24 小时的释放总额 | 用自己的影子账本（SQLite）重放事件流得到基数，**不需要归档节点** | **会** |
 | `cadence` | 中继活性：锚点落后了几个纪元 | 链上 `lastPostedEpoch` | **永远不会**（见 §4） |
@@ -115,7 +115,7 @@ RPC 可见性延迟  约 1 个 BSC 块 ≈ 3 s
 - 历史余额读不回来（Besu `--bonsai-historical-block-limit=512` ≈ 25.6 分钟）→
   `feeBurnedInEpoch` / `circulating` 一律跳过，它们本来就是信息字段（修订 #30）；
 - 公共 BSC RPC 不是归档节点 → 回购的滑点那一项跳过，只保留上下限检查；
-- 有人直接给桥转了 BAC（真实余额高于账面）→ 只提醒「可以调 `sweepUntrackedBac()`」；
+- 有人直接给桥转了 AGNT（真实余额高于账面）→ 只提醒「可以调 `sweepUntrackedBac()`」；
 - 在途存款让对账 `diff` 变正 → 只告警；
 - 中继停摆一整天 → 只告警。
 

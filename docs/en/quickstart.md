@@ -4,44 +4,49 @@
 
 # Bring your agent onto Agentic Chain
 
-This is a working guide, not a roadmap. Everything in Part 1 and Part 3 you can run right now and
-verify yourself. Everything in Part 2 and Part 4 arrives with the production chain, which has not
-been launched.
+> **Status, 2026-09-28.** The rehearsal chain described in Part 0 is stopped, the BSC-side
+> contracts are being redeployed, and AGNT has not launched. The network details in Part 1 are the
+> production chain's (chainId 60606); nothing answers on them until launch. Contract and token
+> addresses are published in the README's Status section at launch — do not send anything before
+> then.
+
+This is a working guide, not a roadmap. Part 1 and Part 3 work once the production chain is live;
+Part 2 and Part 4 arrive with the launch.
 
 ## Part 0 — What exists today, and what does not
 
-A **rehearsal chain** is live. It runs the production parameters and it is real in the sense that
-blocks are produced, the RPC answers, and you can sync your own node against it. It is not the
-product:
+A **rehearsal chain** ran on the production parameters under chainId 56777 until 2026-09-23; it is
+stopped. It was real in the sense that blocks were produced, the RPC answered, and anyone could
+sync a node against it. It was never the product:
 
-| | Rehearsal chain (today) | Production chain (after launch) |
+| | Rehearsal chain (stopped) | Production chain (after launch) |
 |---|---|---|
 | Blocks, RPC, P2P | Yes | Yes |
-| System contracts in genesis | **None** | L2Bridge, L2Gate, AgentBook, FeeSplitter, WBAC |
+| System contracts in genesis | **None** | L2Bridge, L2Gate, AgentBook, FeeSplitter, WAGNT |
 | Multicall3 / CREATE2 deployer | **Not preloaded** | Preloaded |
-| BSC-side contracts | **Deployed 2026-09-23**, readable now | Same contracts |
-| Bridge in from BSC | **Not yet** — the token has not launched, so there is no BAC to lock | Yes, gated on ERC-8004 |
-| Native coin | A public test balance, no value | BAC bridged 1:1 from BSC |
+| BSC-side contracts | Deployed 2026-09-23, **being redeployed** | The redeployed contracts |
+| Bridge in from BSC | **Not yet** — the token has not launched, so there is no AGNT to lock | Yes, gated on ERC-8004 |
+| Native coin | A public test balance, no value | AGNT bridged 1:1 from BSC |
 | Data | Wiped whenever we want | Permanent |
 
 Its genesis allocates a single account, `0x70997970C51812dc3A010C7d01b50e0d17dC79C8`, holding
-1,000,000,000 test BAC. That is the **default Hardhat test account**: its private key is published
+1,000,000,000 test AGNT. That is the **default Hardhat test account**: its private key is published
 in Hardhat's own documentation, everybody has it, and the balance is worth nothing. It exists so
 you can try the chain without asking us for anything. Do not put anything you care about behind it.
 
 So: use the rehearsal chain to check that the chain is real and that your tooling talks to it. Do
 not build a product on it.
 
-## Part 1 — Connect (works today)
+## Part 1 — Connect (at launch)
 
 **Network details**
 
 | Field | Value |
 |---|---|
-| Chain ID | `56777` (`0xddc9`) |
-| RPC | `https://bnbagentchain-rpc.xyz/rpc` |
+| Chain ID | `60606` (`0xecbe`) |
+| RPC | `https://agenticchain-rpc.xyz/rpc` |
 | Fallback RPC | `https://95-179-183-132.sslip.io/rpc` |
-| Explorer | `https://bnbagentchain-scan.com` |
+| Explorer | `https://agenticchain.vip` |
 | Block time | 3 seconds, instant finality (QBFT) |
 | Gas limit | 20,000,000 |
 | Base fee | Zero. Fees are tips and go to the block proposer. |
@@ -51,10 +56,10 @@ not build a product on it.
 **Check it yourself before you trust anything else here.**
 
 ```bash
-curl -s -X POST https://bnbagentchain-rpc.xyz/rpc \
+curl -s -X POST https://agenticchain-rpc.xyz/rpc \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
-# {"jsonrpc":"2.0","id":1,"result":"0xddc9"}
+# {"jsonrpc":"2.0","id":1,"result":"0xecbe"}
 ```
 
 **From viem**
@@ -62,12 +67,12 @@ curl -s -X POST https://bnbagentchain-rpc.xyz/rpc \
 ```ts
 import { createPublicClient, defineChain, http } from 'viem'
 
-export const bac = defineChain({
-  id: 56777,
+export const agentic = defineChain({
+  id: 60606,
   name: 'Agentic Chain',
-  nativeCurrency: { name: 'BAC', symbol: 'BAC', decimals: 18 },
-  rpcUrls: { default: { http: ['https://bnbagentchain-rpc.xyz/rpc'] } },
-  blockExplorers: { default: { name: 'BAC Scan', url: 'https://bnbagentchain-scan.com' } },
+  nativeCurrency: { name: 'AGNT', symbol: 'AGNT', decimals: 18 },
+  rpcUrls: { default: { http: ['https://agenticchain-rpc.xyz/rpc'] } },
+  blockExplorers: { default: { name: 'Agentic Chain Explorer', url: 'https://agenticchain.vip' } },
 })
 
 const client = createPublicClient({ chain: bac, transport: http() })
@@ -77,8 +82,8 @@ console.log(await client.getBlockNumber())
 **From foundry**
 
 ```bash
-cast chain-id     --rpc-url https://bnbagentchain-rpc.xyz/rpc
-cast block-number --rpc-url https://bnbagentchain-rpc.xyz/rpc
+cast chain-id     --rpc-url https://agenticchain-rpc.xyz/rpc
+cast block-number --rpc-url https://agenticchain-rpc.xyz/rpc
 ```
 
 Two things that will bite you if nobody says them. Transactions are final the moment they are
@@ -87,7 +92,7 @@ included — QBFT does not reorganise, so do not write "wait N confirmations" lo
 goes to whoever produced the block, so there is no burn and no EIP-1559 price curve to lean on.
 
 **Deploying a contract on the rehearsal chain** works exactly as on any EVM chain at Cancun. Fund
-your address from the public test account above, or ask for a couple of test BAC — there is nothing
+your address from the public test account above, or ask for a couple of test AGNT — there is nothing
 to gate, because there is nothing of value.
 
 ## Part 2 — What your agent does on BSC
@@ -95,24 +100,21 @@ to gate, because there is nothing of value.
 > A step-by-step version of just this part, from minting an identity to leaving again, is in
 > [joining.md](joining.md).
 
-**The BSC-side contracts are deployed.** They went out on 2026-09-23 from block 123558962, and you
-can read every one of them right now:
+**The BSC-side contracts are being redeployed, and AGNT has not launched.** Their addresses are
+published in the README's Status section at launch, after they are read back off the chain. Any
+address presented as the AGNT token or this project's bridge before then is not this project.
 
 | Contract | Address |
 |---|---|
-| `BacBridge` (UUPS proxy) | `0x2129f336ff42821afa27fE5928Dec36Ba90d3508` |
-| `BacTaxRouter` | `0x63D213C8AAa4E1C758ea41f8ed35066181B8e818` |
-| `BacNodeFund` | `0xBf92C03f2eD3b7aDFC4908019DF51a0401fC23Ff` |
-| `ChainAnchor` | `0xe6cCCD4809905152588f31417408c4Af9043b406` |
-| `ValidatorStaking` | `0xC0cdF18fb2aF4C5Ca34603B6D7C4E29005042943` |
+| `BacBridge` (UUPS proxy), `BacTaxRouter`, `BacNodeFund`, `ChainAnchor`, `ValidatorStaking` | Published at launch |
 | ERC-8004 Identity Registry (not ours) | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` |
-| BAC token | `0xA97452d175679B2bF5F25a9a382D22aff39b7777` — **predicted, not launched: `eth_getCode` is empty** |
+| AGNT token | Published at launch |
 
-What you can do today: read the wiring and the constants off the live bridge.
+Once the bridge address is published, read the wiring and the constants off it:
 
 ```bash
 R=https://bsc-dataseed.bnbchain.org
-B=0x2129f336ff42821afa27fE5928Dec36Ba90d3508
+B=<bridge address, published at launch>
 
 cast call $B "identityRegistry()(address)" --rpc-url $R   # 0x8004A1..a432
 cast call $B "EPOCH()(uint64)"             --rpc-url $R   # 600
@@ -132,7 +134,7 @@ withdraw all of the funds in the bridge pool at any time*, and *we require an ag
 cannot prove it is an AI*. Those are on chain because a disclosure you can only find in a README is
 a disclosure someone can quietly edit.
 
-What you cannot do yet: `lock`. The token has not launched, so there is no BAC to lock, and the
+What you cannot do yet: `lock`. The token has not launched, so there is no AGNT to lock, and the
 production layer chain has not been started, so there is nowhere to credit it to.
 
 ### Getting in
@@ -162,15 +164,15 @@ forwards. That is the only reason `lock` takes the parameter.
 ### Building something
 
 The genesis carries three system contracts, a fee-splitting contract, and three neutral tools:
-Multicall3, the CREATE2 deterministic deployer, and Wrapped BAC at `0x..0106`.
+Multicall3, the CREATE2 deterministic deployer, and Wrapped AGNT at `0x..0106`.
 
 That is the whole inventory. There is no official DEX, no official router, no official market and
 no official stablecoin, and there will not be. The bar for preloading anything is four clauses
-wide — no owner, no parameter, no upgrade path, no fee, and we cannot change it either. WBAC passes
+wide — no owner, no parameter, no upgrade path, no fee, and we cannot change it either. WAGNT passes
 all four: a WETH9-shaped contract of 1,807 bytes whose `totalSupply()` returns its own balance. A
 DEX passes none of them, so writing one is your job, not ours.
 
-WBAC is in genesis for one reason: a Uniswap-V2 style pair needs an ERC-20 on both sides, and the
+WAGNT is in genesis for one reason: a Uniswap-V2 style pair needs an ERC-20 on both sides, and the
 gas coin is not one. Without an agreed wrapper the gas coin cannot enter any pool and the first
 pool never gets built, and several incompatible wrappers would split what little liquidity a new
 chain has.
@@ -191,12 +193,12 @@ each other without waiting for a transaction to land.
 2. wait out the current epoch                    // at most 10 minutes
 3. the anchor is posted
 4. wait ANCHOR_WAIT = 120 seconds
-5. BacBridge.claimExit    // locks a BAC-denominated claim at that moment's rate
+5. BacBridge.claimExit    // locks an AGNT-denominated claim at that moment's rate
 6. BacBridge.collect      // pays it down under a daily cap
 ```
 
-About twelve to thirteen minutes gets you a **locked claim, not the money.** Tax on BAC trading
-arrives as BNB, half of it goes to the bridge, and the bridge spends it buying BAC on the market;
+About twelve to thirteen minutes gets you a **locked claim, not the money.** Tax on AGNT trading
+arrives as BNB, half of it goes to the bridge, and the bridge spends it buying AGNT on the market;
 exits are paid out of that bought-back stock, pro rata, under a daily release cap. A holder of a
 tenth of outstanding credits needs roughly a month to be ninety percent paid.
 
@@ -211,7 +213,7 @@ The P2P port is open. You do not need our permission and you do not need to tell
 
 ```bash
 mkdir bac-node && cd bac-node \
- && curl -sO https://bnbagentchain-rpc.xyz/genesis.json \
+ && curl -sO https://agenticchain-rpc.xyz/genesis.json \
  && echo '["enode://8bc629391bad4d09cde161acf298d25ffb5dc2eee22c64acd9b0cd40596176b34c189a01a0787879cc4205dd8a1312dff141d06f284f6a1eb2b7c91e98cfb564@95.179.183.132:30303"]' > static-nodes.json \
  && docker run -d --name bac-node --user "$(id -u):$(id -g)" \
       -p 127.0.0.1:8545:8545 -v "$PWD":/w \
@@ -226,7 +228,7 @@ Measured on a clean machine: 24 seconds from block 0 to the head. Check that you
 
 ```bash
 cast block 10000 --rpc-url http://127.0.0.1:8545 --field hash
-cast block 10000 --rpc-url https://bnbagentchain-rpc.xyz/rpc --field hash
+cast block 10000 --rpc-url https://agenticchain-rpc.xyz/rpc --field hash
 ```
 
 Two flags are load-bearing, and both cost an hour to discover:
@@ -246,7 +248,7 @@ chain.
 Producing blocks is earned, not granted.
 
 ```
-1. stake BAC on BSC                    // MIN_STAKE = 2,000,000 BAC
+1. stake AGNT on BSC                    // MIN_STAKE = 2,000,000 AGNT
 2. register your node
 3. attest once a day                   // one batched transaction covering that day's 144 anchors
 4. stay online and attest correctly for 30 consecutive epochs
@@ -259,7 +261,7 @@ the blocks **you** produce.
 
 Three details worth having before you build a business case:
 
-- The fee is **in-layer BAC**. Converting it to BNB uses the same exit as everyone else, at
+- The fee is **in-layer AGNT**. Converting it to BNB uses the same exit as everyone else, at
   whatever rate the pool supports that day.
 - With a zero base fee the fee lands in the **proposer's own address**, so the split is held by
   published accounting anyone can recompute against the chain, rather than by a contract. We

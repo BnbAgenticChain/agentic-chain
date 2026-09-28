@@ -117,7 +117,7 @@ for (const r of await agent.replayPendingExits()) {
 - `exit()` 读不到 `/api/rate` → 停（积分会当场销毁，不能拿一个猜的兑付率去烧钱）。
 - `exit()` 读到 `credits × weiPerCredit == 0` → 抛 `RateTooLowError`，默认拒发。
   确实要退（打算等池子变厚再领）就显式传 `{ allowZeroRate: true }`。
-- 证明里的 `layerChainId` 不是 56777 → 停，不拿它去发交易。
+- 证明里的 `layerChainId` 不是 60606 → 停，不拿它去发交易。
 - `anchorMath.l2BlockFor()` 读不到区块、或纪元早于创世 → 停。
   口径不一致会让见证人把诚实锚点判成异议，三个纪元就触发停机条件。
 
@@ -202,7 +202,7 @@ import { built } from "@bac/agent-sdk";
    它的每一个 bug、每一处税、每一个 owner 权限，都会被当成我们的承诺。我们不接这个责任。
 
 所以 `deployContract(signer, { abi, bytecode }, args)` 要求你传自己的编译产物。
-创世里只有三个中立工具（Multicall3、CREATE2 部署器、WBAC）—— 它们不是 DEX，也不决定谁能发什么币。
+创世里只有三个中立工具（Multicall3、CREATE2 部署器、WAGNT）—— 它们不是 DEX，也不决定谁能发什么币。
 `examples/build-a-market.mjs` 里的三份 artifact 必须由你自己提供，**那个例子没有字节码就跑不起来，这是故意的**。
 
 有一条测试在盯着这件事：`dist/built/*.js` 里出现任何长十六进制串或写死的 40 位地址，测试就红。
@@ -241,7 +241,7 @@ for await (const ev of built.watchBuilt({ signal }, cfg)) console.log(ev.kind, e
    **请把 `detection.note` 显示出来**，不许把列表说成「全链所有代币」。
    认不出来的合约数在 `detection.unclassifiedContracts` 里，它们同样是 agent 造的东西。
 2. **金额是该代币自己的最小单位**，随行给 `decimals`；`decimals` 为 `null` 时**不许默认当 18**，
-   也不许把代币金额和 BAC / BNB 放进同一个合计里。
+   也不许把代币金额和 AGNT / BNB 放进同一个合计里。
 3. **`name` / `symbol` 是部署者自己写的**，`nameTrusted` 恒为 `false`。同名不合并、不去重、不打假标签，
    只按地址区分；渲染成 HTML 前自己转义。
 
@@ -266,15 +266,15 @@ await built.swapExactIn(signer, { router, path: [tokenIn, tokenOut], amountIn, s
 - `deadline` 取**链上最新块时间** + 10 分钟（一个纪元，决策 #20），不用本机时钟。
 - 路由器形状完全不一样时用 `swapOnPairDirect()` 直接打交易对。
   它是**两笔交易**（先转币、再 `swap`），中间可能被抢跑 —— 文档里写清楚了，请只用小额。
-- `wrapNative()` / `unwrapNative()` 的 WBAC 地址也是参数：`built.wrappedNativeAddress(cfg)` 从
+- `wrapNative()` / `unwrapNative()` 的 WAGNT 地址也是参数：`built.wrappedNativeAddress(cfg)` 从
   `/api/health` 读，读不到就报错。**SDK 不写死它**，因为地址由创世文件决定。
 
 ### 4. 主端点 / 兜底端点的切换（和网站同一套逻辑）
 
 ```js
 const cfg = {
-  apiBase: "https://bnbagentchain-rpc.xyz",  fallbackApi: "https://95-179-183-132.sslip.io",
-  layerRpc: "https://bnbagentchain-rpc.xyz/rpc", fallbackRpc: "https://95-179-183-132.sslip.io/rpc",
+  apiBase: "https://agenticchain-rpc.xyz",  fallbackApi: "https://95-179-183-132.sslip.io",
+  layerRpc: "https://agenticchain-rpc.xyz/rpc", fallbackRpc: "https://95-179-183-132.sslip.io/rpc",
 };
 ```
 

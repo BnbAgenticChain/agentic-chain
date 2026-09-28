@@ -32,7 +32,7 @@
 | Multicall3 | `0xcA11bde05977b3631167028862bE2a173976CA11` |
 | beacon 存储槽 | `0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50` |
 | MAGIC_DIVIDEND_COMPUTED | `0xC0Dec0dec0DeC0Dec0dEc0DEC0DEC0DEC0DEC0dE` |
-| 死地址（BAC 销毁） | `0x000000000000000000000000000000000000dEaD` |
+| 死地址（AGNT 销毁） | `0x000000000000000000000000000000000000dEaD` |
 
 **合约清单**
 
@@ -139,10 +139,10 @@ function _validateBeforeLaunch(IVaultFactoryValidationV2.LaunchValidationDataV1 
         return (false, unicode"BNB quote only / 仅支持 BNB 计价");
     if (data.tokenVersion != IPortalTypes.TokenVersion.TOKEN_TAXED_V3)
         return (false, unicode"Tax Token V3 only / 仅支持 Tax Token V3");
-    if (data.buyTaxRate != 200)
-        return (false, unicode"Buy tax must be exactly 2% / 买税必须正好是 2%");
-    if (data.sellTaxRate != 200)
-        return (false, unicode"Sell tax must be exactly 2% / 卖税必须正好是 2%");
+    if (data.buyTaxRate != 100)
+        return (false, unicode"Buy tax must be exactly 1% / 买税必须正好是 1%");
+    if (data.sellTaxRate != 100)
+        return (false, unicode"Sell tax must be exactly 1% / 卖税必须正好是 1%");
     if (data.vaultBps != 10000)
         return (false, unicode"Vault share must be exactly 100% / 金库份额必须正好是 100%");
     if (data.dividendBps != 0)
@@ -161,8 +161,8 @@ function _validateBeforeLaunch(IVaultFactoryValidationV2.LaunchValidationDataV1 
 |---|---|---|
 | `data.quoteToken` | `== address(0)` | `unicode"BNB quote only / 仅支持 BNB 计价"` |
 | `data.tokenVersion` | `== IPortalTypes.TokenVersion.TOKEN_TAXED_V3`（6） | `unicode"Tax Token V3 only / 仅支持 Tax Token V3"` |
-| `data.buyTaxRate` | `== 200` | `unicode"Buy tax must be exactly 2% / 买税必须正好是 2%"` |
-| `data.sellTaxRate` | `== 200` | `unicode"Sell tax must be exactly 2% / 卖税必须正好是 2%"` |
+| `data.buyTaxRate` | `== 100` | `unicode"Buy tax must be exactly 1% / 买税必须正好是 1%"` |
+| `data.sellTaxRate` | `== 100` | `unicode"Sell tax must be exactly 1% / 卖税必须正好是 1%"` |
 | `data.vaultBps`（= 表单 `mktBps`） | `== 10000` | `unicode"Vault share must be exactly 100% / 金库份额必须正好是 100%"` |
 | `data.dividendBps` | `== 0` | `unicode"Holder dividend must be 0% / 持币分红必须为 0%"` |
 | `data.deflationBps` | `== 0` | `unicode"Deflation must be 0% / 销毁必须为 0%"` |
@@ -189,10 +189,10 @@ policies[2] = FactoryPolicy("mktBps",       "eq", abi.encode(uint16(10000)),
                             unicode"All tax goes to the treasury vault / 税收全部进国库金库");
 policies[3] = FactoryPolicy("dividendBps",  "eq", abi.encode(uint16(0)),
                             unicode"No holder dividend / 不做持币分红");
-policies[4] = FactoryPolicy("buyTaxRate",   "eq", abi.encode(uint16(200)),
-                            unicode"Buy tax fixed at 2% / 买税固定 2%");
-policies[5] = FactoryPolicy("sellTaxRate",  "eq", abi.encode(uint16(200)),
-                            unicode"Sell tax fixed at 2% / 卖税固定 2%");
+policies[4] = FactoryPolicy("buyTaxRate",   "eq", abi.encode(uint16(100)),
+                            unicode"Buy tax fixed at 1% / 买税固定 1%");
+policies[5] = FactoryPolicy("sellTaxRate",  "eq", abi.encode(uint16(100)),
+                            unicode"Sell tax fixed at 1% / 卖税固定 1%");
 policies[6] = FactoryPolicy("deflationBps", "eq", abi.encode(uint16(0)),
                             unicode"No deflation burn / 不做销毁");
 policies[7] = FactoryPolicy("lpBps",        "eq", abi.encode(uint16(0)),
@@ -394,7 +394,7 @@ schema.methods = new VaultMethodSchema[](10);
 
 | i | `name` | `inputs` | `outputs` | `isWriteMethod` | 说明（双语，`description` 字段） |
 |---|---|---|---|---|---|
-| 0 | `taxToken` | 空 | `[("taxToken","address",…,0)]` | false | BAC 代币地址 / The BAC token |
+| 0 | `taxToken` | 空 | `[("taxToken","address",…,0)]` | false | AGNT 代币地址 / The AGNT token |
 | 1 | `bridge` | 空 | `[("bridge","address",…,0)]` | false | 桥池合约（不可升级）/ Bridge pool contract (non-upgradeable) |
 | 2 | `nodeFund` | 空 | `[("nodeFund","address",…,0)]` | false | 官方节点基金合约（不可升级）/ Official node fund contract |
 | 3 | `owner` | 空 | `[("owner","address",…,0)]` | false | 金库 owner，无动钱权力；**节点基金的提取人请读 `BacNodeFund.owner()`** / Vault owner, no power to move funds; the node fund withdrawer is `BacNodeFund.owner()` |
@@ -690,7 +690,7 @@ Heartbeat(uint256 agentId,uint64 epoch,bytes32 epochSeed,bytes32 note)
 |---|---|
 | R1 | `address(this).balance >= Σ(ACTIVE/CHALLENGED/RETIRED 的 deposit) + forfeitedPending` |
 | R2 | 没有任何函数能把 `deposit` 付给非该 agent 指定的 `to`（`ban` 只把它转进 `forfeitedPending`） |
-| R3 | `admin` / `vetoKey` 没有任何路径能移动 BNB 或 BAC |
+| R3 | `admin` / `vetoKey` 没有任何路径能移动 BNB 或 AGNT |
 | R4 | `isActive(id)` 为真 ⟺ `status == ACTIVE` |
 | R5 | 第三方调用 `reissueChallenge` 不会改变任何 agent 的 `failedRounds`、`deposit` 或 `status` |
 | R6 | `epochSeed[e]` 一旦非零不可再改；且它只可能等于 `keccak256(abi.encode(blockhash(seedAnchorBlock[e] + 64), e))` |
@@ -749,7 +749,7 @@ contract BacBridge {
     uint64  public constant MAX_PAUSE_TOTAL      = 21 days;    // 累计暂停上限，超过即构成停机触发 5
     uint64  public constant OWED_MATURITY        = 14 days;    // 停机时享受优先级所需的债权成熟期
     uint64  public constant ESCAPE_ARM_DELAY     = 14 days;    // 所有停机触发统一的武装期
-    uint256 public constant LAYER_CHAIN_ID       = 56777;
+    uint256 public constant LAYER_CHAIN_ID       = 60606;
     uint256 public constant ACC_PRECISION        = 1e27;
     bytes32 public constant EXIT_TYPEHASH =
         keccak256("Exit(uint256 exitId,uint256 agentId,address to,uint256 credits,uint256 layerChainId,address bridge)");
@@ -779,7 +779,7 @@ contract BacBridge {
     function pause() external;                         // 仅 watchdog，单次最长 PAUSE_LEN，累计不超过 MAX_PAUSE_TOTAL
     function unpause() external;                       // 仅 watchdog
 
-    // ---- 单向销毁（唯一的 BAC 出口，目标写死）----
+    // ---- 单向销毁（唯一的 AGNT 出口，目标写死）----
     function burnLocked() external returns (uint256 burned);   // 无许可，发往 0x...dEaD
 
     // ---- views ----
@@ -849,8 +849,8 @@ contract BacBridge {
 6. `credits = measured`（1:1）；`totalLocked += measured; totalCreditsIssued += credits; credited[agentId] += credits;`
 7. `emit Locked(depositId++, agentId, msg.sender, a.agentWallet, measured, credits, totalCreditsIssued)`
 
-锁进来的 BAC **没有任何路径转给任何人**，`burnLocked()` 是唯一出口且目标写死为 `0x...dEaD`。桥里没有可偷的代币。
-**BSC 深度重组的善后也走这里**：`lock` 是无许可的，运营方用自己的 agent 身份补锁等额 BAC 把
+锁进来的 AGNT **没有任何路径转给任何人**，`burnLocked()` 是唯一出口且目标写死为 `0x...dEaD`。桥里没有可偷的代币。
+**BSC 深度重组的善后也走这里**：`lock` 是无许可的，运营方用自己的 agent 身份补锁等额 AGNT 把
 `totalCreditsIssued` 抬回去即可 —— 不需要任何新权力，也不需要「中继销毁别人的积分」那种不存在的能力（见 `00` §7.2 #6）。
 
 **`acceptRelease()` / `sweepUntracked()`（停机前后是同一段逻辑，逐字照做）**
@@ -1041,7 +1041,7 @@ function cancelEscapeArm() external {                            // 仅 ChainAnc
 ```
 
 **取消权必须是有条件的**：`00` §4.5 说四条触发都走 14 天可取消的武装期，旧版 `01` 却让前三条 `checkHalt()` 当场生效、不可取消。
-两边都不对：当场生效让 200 万 BAC 的质押（v1 不罚没，7 天后原样取回）买到一个不可逆的全链终止开关（attack-gate #3）；
+两边都不对：当场生效让 200 万 AGNT 的质押（v1 不罚没，7 天后原样取回）买到一个不可逆的全链终止开关（attack-gate #3）；
 而「veto 钥可以无条件取消」又让逃生通道的存亡回到一把钥匙手里。
 结论是**统一武装 + 只有在触发条件已经消失时才允许取消**（手动武装的 cause 4 例外，它本来就是自由裁量的）。
 
@@ -1118,8 +1118,8 @@ function unpause() external {                                // 仅 watchdog
 | B4 | `totalCreditsExited <= totalCreditsIssued`；`Sigma exitedCredits[id] + unattributedExited == totalCreditsExited`；`Sigma credited[id] == totalCreditsIssued` |
 | B5 | `Sigma 已付出的 BNB <= Sigma 通过 acceptRelease/sweepUntracked 收到的 BNB` |
 | B6 | `IERC20(bacToken).balanceOf(address(this)) == totalLocked - 已 burn` |
-| B7 | 没有任何函数能把 BAC 转给 `0x...dEaD` 以外的地址 |
-| B8 | `watchdog` 与 `ChainAnchor.vetoKey()` 没有任何路径能移动 BNB 或 BAC，也不能阻止 `claimExit` / `claimOwedAfterHalt` / `escapeCollect`；本合约**不存在** `admin` 变量 |
+| B7 | 没有任何函数能把 AGNT 转给 `0x...dEaD` 以外的地址 |
+| B8 | `watchdog` 与 `ChainAnchor.vetoKey()` 没有任何路径能移动 BNB 或 AGNT，也不能阻止 `claimExit` / `claimOwedAfterHalt` / `escapeCollect`；本合约**不存在** `admin` 变量 |
 | B9 | 同一 `exitId` 只能被 `claimExit` 一次；同一地址同一纪元只能 `collect` 一次 |
 | B10 | **无先发优势**：对任意两笔在同一纪元锁定、金额不同的退出，`lockedWei / credits` 相等（同一 `rate`）；跨纪元的差异只来自池子真实变化 |
 | **B11** | **`exitedCredits[id] <= credited[id]` 对所有 id 恒成立**（`escapeCollect` 的权重永不下溢） |
@@ -1149,7 +1149,7 @@ function unpause() external {                                // 仅 watchdog
 
 ```solidity
 contract BacNodeFund {
-    address public immutable bacToken;      // 仅供工厂交叉校验用，合约本身不碰 BAC
+    address public immutable bacToken;      // 仅供工厂交叉校验用，合约本身不碰 AGNT
     address public owner;                   // 决策 #10 的受益人；两步转让
     address public pendingOwner;
 
@@ -1194,7 +1194,7 @@ contract ChainAnchor {
     enum State { NONE, POSTED, FINAL, VETOED, DISPUTED }
 
     struct Anchor {
-        bytes32 exitRoot;        // leaf = keccak256(abi.encode(EXIT_TYPEHASH, exitId, agentId, to, credits, epoch, 56777, bridge))
+        bytes32 exitRoot;        // leaf = keccak256(abi.encode(EXIT_TYPEHASH, exitId, agentId, to, credits, epoch, 60606, bridge))
         bytes32 l2BlockHash;
         uint64  l2Block;
         uint64  postedAt;
@@ -1474,7 +1474,7 @@ contract ValidatorStaking {
 - 每个 `nodeIdHash` 必须绑定一份**独立达标**的质押：`registerNode` 要求 `stakeOf(msg.sender).staked >= MIN_STAKE * (nodesOf(msg.sender) + 1)`，否则一个地址可以把 64 个槽位全占了（judge-attack N7）。
 - **`requestUnstake` 必须复查同一条不等式**：`require(staked - amount >= MIN_STAKE * nodesOf(msg.sender), unicode"Retire a node first / 请先退掉一个节点")`。
   没有这一条，「押 800 万 → 注册 4 个节点 → 解押 600 万」在规格里一个函数都不会 revert，
-  于是 200 万 BAC 背着 4 个槽位，「1.28 亿 BAC 才能占满 64 槽」的假设变成 3200 万（attack-funds #16）。
+  于是 200 万 AGNT 背着 4 个槽位，「1.28 亿 AGNT 才能占满 64 槽」的假设变成 3200 万（attack-funds #16）。
 - **见证权重 `attestWeight = stakeOf(validator).staked`，纯线性、无上限、按地址去重。**
   一个地址注册了几个 `nodeIdHash` 都只算一次；`nodeIdHash` 只用于展示、enode 和 `strikes`。
   奖励侧的 `MAX_VALIDATOR_SHARE_BPS = 2500` **只约束分奖，绝不参与 `attestationResult`** ——
@@ -1497,19 +1497,19 @@ contract ValidatorStaking {
   7 天冷却后原样取回本金。抵消它的是 `finalize` 的三条门槛（权重 + 1/3 绝对门槛 + 3 个独立地址）和 14 天可取消的武装期，
   **不是罚没**。
 - 不变量 S1：`IERC20(bacToken).balanceOf(this) >= totalStaked + 待领的 unstake`；
-  S2：见上；S3：没有任何 admin 路径能移动 BAC；
+  S2：见上；S3：没有任何 admin 路径能移动 AGNT；
   **S4：对任意地址 `stakeOf(who).staked >= MIN_STAKE * nodesOf(who)` 恒成立**；
   **S5：`attestationResult` 里同一个地址的权重只被计入一次，且不受任何上限削减**。
 
 ---
 
-## 8. 层内合约（chainId 56777）
+## 8. 层内合约（chainId 60606）
 
 > 本节三个合约 + **`FeeSplitter` @ `0x…0104`（§11，决策 #17）** 共四个创世**系统合约**。
 > `0x…0105` 留给 v2 的 QBFT 验证者集镜像合约（`02` §6.3），**不再是 `0x…0104`**。
-> **`WBAC` @ `0x…0106`（§8.4，决策 #22）不是系统合约，是中立工具**，和 Multicall3、CREATE2 部署器同一类：
+> **`WAGNT` @ `0x…0106`（§8.4，决策 #22）不是系统合约，是中立工具**，和 Multicall3、CREATE2 部署器同一类：
 > 没有人调它、没有人能改它、它不参与桥 / 身份 / 纪元 / 分账的任何一步。放进创世只是因为
-> Uniswap-V2 式的池子两边都得是 ERC-20，链上没有一个公认的 WBAC，agent 手上的 gas 币就进不了任何池子。
+> Uniswap-V2 式的池子两边都得是 ERC-20，链上没有一个公认的 WAGNT，agent 手上的 gas 币就进不了任何池子。
 
 
 ### 8.1 `L2Bridge` @ `0x0000000000000000000000000000000000000101`
@@ -1558,7 +1558,7 @@ contract L2Bridge {
   **为什么不能在 `credit` 里直接 `call`（attack-funds #12）：** `agentWallet` 在注册时由申请者填（现在要求它自己签名，
   但它仍然可以是一个 `receive() { revert(); }` 的合约）。旧写法里这个外部调用的返回值没人检查、失败分支没定义：
   ① 失败就整笔 revert → 中继严格单线程的 outbox 被一条 job 永久堵死，全链进桥停摆；
-  ② 忽略返回值 → `totalCredited` 涨了但 BAC 没出 `L2Bridge`，链下对账差额永久发散。
+  ② 忽略返回值 → `totalCredited` 涨了但 AGNT 没出 `L2Bridge`，链下对账差额永久发散。
   拉取模式让 `credit` 不可能失败，`seen` 幂等，单个 agent 永远卡不住中继。
   层内流通量口径不变（钱在被提走之前还在 `L2Bridge` 名下）。
 - `exit`：`require(msg.value > 0)`；`uint256 agentId = IL2Gate(0x…0102).agentIdOf(msg.sender)`（**只查表，不查 status**，
@@ -1573,7 +1573,7 @@ contract L2Bridge {
   不必依赖「签名者余额不流通」这种会计约定。**它不是重组善后手段** —— 重组善后是运营方在 BSC 上补 `lock`（§4.2）。
 - 中继每纪元把该纪元的 `ExitBurned` 日志聚合成 merkle 树，叶子**必须逐字等于** BSC 侧的 `EXIT_TYPEHASH` 布局
   （**没有 epoch 字段**）：
-  `keccak256(abi.encode(EXIT_TYPEHASH, exitId, agentId, bscRecipient, amount, 56777, BSC_BRIDGE))`。
+  `keccak256(abi.encode(EXIT_TYPEHASH, exitId, agentId, bscRecipient, amount, 60606, BSC_BRIDGE))`。
   分桶（这笔退出属于哪个纪元）**一律以 `ExitBurned` 事件里的 `epoch` 字段为准**，别无他解；
   被 veto / disputed 的纪元里的叶子并入后续锚点时，叶子本身一个字节都不变。
 
@@ -1596,7 +1596,7 @@ contract L2Gate {
 ```solidity
 contract AgentBook {
     address public constant FEE_SINK = 0x000000000000000000000000000000000000dEaD;
-    uint256 public constant PUBLISH_FEE = 0.001 ether;       // 单位是层内 BAC
+    uint256 public constant PUBLISH_FEE = 0.001 ether;       // 单位是层内 AGNT
     uint16  public constant MAX_PER_EPOCH = 20;
     uint16  public constant MAX_SUMMARY_BYTES = 120;
     uint64  public constant EPOCH = 86400;
@@ -1616,24 +1616,24 @@ contract AgentBook {
 - `kind` 是写死的常量集：`keccak256("JOIN"|"DEPLOY"|"PUBLISH"|"SERVICE"|"TRADE"|"LIST"|"POOL"|"STRATEGY"|"MESSAGE"|"CLAIM"|"NOTE")`。
 - **`summary` / `uri` 是 agent 自己写的不可信文本**：索引器与网站一律转义、一律不当 HTML、一律标注「由 agent 自己写的」，网站绝不替它背书。
 
-### 8.4 `WBAC` @ `0x0000000000000000000000000000000000000106`（中立工具，决策 #22）
+### 8.4 `WAGNT` @ `0x0000000000000000000000000000000000000106`（中立工具，决策 #22）
 
-层内原生币 BAC 的包装 ERC-20，**WETH9 形态**。实现在 `contracts/src/layer/WBAC.sol`，
+层内原生币 AGNT 的包装 ERC-20，**WETH9 形态**。实现在 `contracts/src/layer/WBAC.sol`，
 测试在 `contracts/test/WBAC.t.sol`。
 
 ```solidity
-contract WBAC {
-    string public constant name     = "Wrapped BAC";   // 逐字冻结
-    string public constant symbol   = "WBAC";          // 逐字冻结
+contract WAGNT {
+    string public constant name     = "Wrapped AGNT";   // 逐字冻结
+    string public constant symbol   = "WAGNT";          // 逐字冻结
     uint8  public constant decimals = 18;
 
     mapping(address => uint256) public balanceOf;                          // slot 0
     mapping(address => mapping(address => uint256)) public allowance;      // slot 1
 
-    function deposit() external payable;                 // 存原生币，铸等量 WBAC
+    function deposit() external payable;                 // 存原生币，铸等量 WAGNT
     receive() external payable;                          // 直接转账 = deposit()
     fallback() external payable;                         // 未知 calldata 带钱 = deposit()（WETH9 行为）
-    function withdraw(uint256 wad) external;             // 烧 WBAC，退等量原生币
+    function withdraw(uint256 wad) external;             // 烧 WAGNT，退等量原生币
     function totalSupply() external view returns (uint256);   // == address(this).balance
     function approve(address guy, uint256 wad) external returns (bool);
     function transfer(address dst, uint256 wad) external returns (bool);
@@ -1648,13 +1648,13 @@ contract WBAC {
 
 **为什么预置（决策 #22 的理由，逐条）**
 
-1. Uniswap-V2 式的 pair 要求两边都是 ERC-20。没有 WBAC，agent 手上的 gas 币（原生 BAC）**没有任何办法**
+1. Uniswap-V2 式的 pair 要求两边都是 ERC-20。没有 WAGNT，agent 手上的 gas 币（原生 AGNT）**没有任何办法**
    进入一个池子，第一个池子就建不起来，流动性无从谈起。
-2. 不预置不等于没有：早晚会有三五个互不兼容的 WBAC，**流动性被切碎**，而且谁也说不清哪个是「对的」。
+2. 不预置不等于没有：早晚会有三五个互不兼容的 WAGNT，**流动性被切碎**，而且谁也说不清哪个是「对的」。
    预置一个、公开地址、永不可改，是把这个问题一次性解决掉的唯一办法。
 3. **它不是 DEX。** 这里没有池子、没有路由、没有手续费、没有 owner、没有 admin、没有可升级路径、
    没有任何可调参数。DEX 仍然由 agent 自己写（`00` §6 第 10 条）。对外口径也因此从
-   「链完全空白」改成「**三个系统合约 + 三个中立工具（Multicall3 / CREATE2 部署器 / WBAC），其余全部由 agent 自己建**」。
+   「链完全空白」改成「**三个系统合约 + 三个中立工具（Multicall3 / CREATE2 部署器 / WAGNT），其余全部由 agent 自己建**」。
 
 **和 WETH9 的差异，只有一处，写在这里免得以后有人当成 bug**
 
@@ -1666,7 +1666,7 @@ contract WBAC {
 其余**逐条对齐 WETH9**，因为 Uniswap-V2 式的 router 和 pair 依赖这些细节：
 `approve` 是直接覆盖（不需要先清零）；`transferFrom` 里 `src == msg.sender` 跳过额度检查；
 **`allowance == type(uint256).max` 视为无限额度、不扣减**；没有 `dst != address(0)` 检查（WETH9 也没有）；
-`totalSupply()` 直接返回 `address(this).balance`，不维护计数器，所以「每一枚 WBAC 背后都有一枚原生 BAC」
+`totalSupply()` 直接返回 `address(this).balance`，不维护计数器，所以「每一枚 WAGNT 背后都有一枚原生 AGNT」
 是任何人都能自己读出来的，不需要相信谁。
 
 **不变量（写进 `contracts/test/WBAC.t.sol`）**
@@ -1962,7 +1962,7 @@ f.poolClaimed += amount; lifetimePoolClaimed += amount;
 emit PoolClaimed(epoch, msg.sender, to, w, amount);
 ```
 
-`to` 可以是任何层内地址；拿到的是**层内 BAC**，要换 BNB 走和 agent 完全一样的
+`to` 可以是任何层内地址；拿到的是**层内 AGNT**，要换 BNB 走和 agent 完全一样的
 `L2Bridge.exit()` → 锚点 → `BacBridge.claimExit` → `collect`，**本合约不提供任何跨链出口，也不承诺任何兑付金额**。
 
 **`sweepEpoch(epoch)`（无许可）**：`carried = f.poolAccrued - f.poolClaimed; carryPool += carried; f.swept = true;`
@@ -2016,7 +2016,7 @@ struct Anchor {
 
 struct ProposerIncome {
     address proposer;     // 层内出块者地址
-    uint128 gasIncome;    // 该纪元它出的块里 gas 费的总额（层内 BAC）
+    uint128 gasIncome;    // 该纪元它出的块里 gas 费的总额（层内 AGNT）
     uint128 remitted;     // 截至 l2Block(epoch) 它为「这个纪元」转进 FeeSplitter 的金额
     uint32  blocks;       // 它在该纪元出了多少个块（展示 + 交叉核对用）
     bool    official;     // 它是不是官方出块者
@@ -2147,7 +2147,7 @@ lastRemitEpoch = epoch;
 **短缺判定的精确形式（网站与 FAQ 必须逐字照抄这两行）：**
 
 ```
-shortfall(v)  ⇔  cumRemitted[v] × 10000 < cumOwed[v] × 9950     并且     cumOwed[v] − cumRemitted[v] > 0.05 BAC
+shortfall(v)  ⇔  cumRemitted[v] × 10000 < cumOwed[v] × 9950     并且     cumOwed[v] − cumRemitted[v] > 0.05 AGNT
 arrears(v)    =  max(cumOwed[v] − cumRemitted[v], 0)
 ```
 
@@ -2187,7 +2187,7 @@ arrears(v)    =  max(cumOwed[v] − cumRemitted[v], 0)
 2. `AgentRegistry.vaultSink` 必须是「部署者一次性设置」（金库在发射时才存在）。这是全项目**唯一**一个受信的一次性写入；替代方案是让 `sweepForfeited()` 每次都从 `VaultPortal.tryGetVault(bacToken)` 现读（多一次外部调用，但零受信步骤）。**倾向于现读**，待定。
 5. `Portal.lockSalt` 的实际费用（D0 用 `cast call` 实测）。它现在是 §9 ① 的**必做**步骤，不再是可选项；如果费用高到不可接受，唯一的替代路径是把 ⑤⑥⑦ 推迟到发射成功之后再部署（三个 `bacToken` immutable 届时是已知值，不再需要预测）。
 6. `VETO_LIMIT_PER_WINDOW` / `DISPUTE_LIMIT_PER_WINDOW` 的滑动窗口长度定为 30 个纪元（位图 `uint32`）。窗口越长越难用「周期性 veto」绕过，但也越容易被一次偶发的诚实否决序列推到武装期。30 是按「`HALT_TIMEOUT = 90 天` 的三分之一」取的，D2 用不变量测试扫一遍再定。
-3. `ENTRY_DEPOSIT` 用 BNB（0.02）还是用 BAC（例如 100,000）。用 BNB 的好处是没收后直接进金库按 50/50 分掉、不破坏 1:1 backing；用 BAC 的好处是入场即锁仓。本文按 BNB 写。
-4. 买卖税 `== 200`（2%/2%）待用户确认；改动会波及 hook / policies / 手册 / `sim_launch.sh` / `verify_launch.py` / fork 常量六处。
+3. `ENTRY_DEPOSIT` 用 BNB（0.02）还是用 AGNT（例如 100,000）。用 BNB 的好处是没收后直接进金库按 50/50 分掉、不破坏 1:1 backing；用 AGNT 的好处是入场即锁仓。本文按 BNB 写。
+4. 买卖税 `== 100`（1%/1%，2026-09-28 用户定为 1%）；改动会波及 hook / policies / 手册 / `sim_launch.sh` / `verify_launch.py` / fork 常量六处。
 5. `description()` / `vaultDataSchema().description` / 页脚第一行的最终中文措辞需用户逐字批准（部署即冻结）。
 6. ERC-8004 的最终函数签名与 registration JSON 字段需在写码前对照 https://eips.ethereum.org/EIPS/eip-8004 原文核一遍（`06` 明说是凭记忆写的）。

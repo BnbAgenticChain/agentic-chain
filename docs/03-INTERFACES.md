@@ -72,8 +72,8 @@
 
 **深于最终性的重组（几乎不可能）的可执行预案：**
 下一次 `postAnchor` 会因为 `cumulativeCredited <= totalCreditsIssued` 而 revert（`01` §6.2 第 7 条）。
-此时**运营方在 BSC 上用自己的 agent 身份补 `lock` 等额 BAC**，把 `totalCreditsIssued` 抬回去，锚点立刻可以继续发。
-`lock` 是无许可的，不动任何用户的积分，不需要任何新权力，代价由运营方承担（所需 BAC 的来源与上限写进服务器 runbook）。
+此时**运营方在 BSC 上用自己的 agent 身份补 `lock` 等额 AGNT**，把 `totalCreditsIssued` 抬回去，锚点立刻可以继续发。
+`lock` 是无许可的，不动任何用户的积分，不需要任何新权力，代价由运营方承担（所需 AGNT 的来源与上限写进服务器 runbook）。
 
 ~~「中继必须先在层内销毁多出的积分」~~ —— **这句话已删除，它描述的是一个不存在的能力**：
 `L2Bridge` 里中继能调的只有 `credit`（只增加流通），销毁只有持有者自己 `exit`，
@@ -176,7 +176,7 @@ rows 按 proposer 地址升序排序后：proposerIncomeRoot = keccak256(abi.enc
 leaf_i = keccak256(abi.encode(
     EXIT_TYPEHASH,            // keccak256("Exit(uint256 exitId,uint256 agentId,address to,uint256 credits,uint256 layerChainId,address bridge)")
     exitId, agentId, to, credits,     // ← 没有 epoch 字段
-    uint256(56777),           // LAYER_CHAIN_ID
+    uint256(60606),           // LAYER_CHAIN_ID
     BAC_BRIDGE_ADDRESS        // BSC 上的 BacBridge
 ))
 叶子按 exitId 升序排列；
@@ -458,7 +458,7 @@ CREATE TABLE epochs (
   rate           TEXT,
   settled_at     INTEGER,
   reward_pot     TEXT,
-  -- 决策 #17：gas 费分账（全部是 wei 十进制字符串，层内 BAC）
+  -- 决策 #17：gas 费分账（全部是 wei 十进制字符串，层内 AGNT）
   proposer_income_root TEXT,
   gas_fees             TEXT,      -- 该纪元全链 gas 费总额（已收）
   gas_remitted         TEXT,      -- 已转入 FeeSplitter 的总额
@@ -545,7 +545,7 @@ CREATE TABLE treasury (               -- 金库 / 桥池 / 节点基金的时间
   reward_funded       TEXT NOT NULL,
   reward_paid         TEXT NOT NULL,
   market_address_ok   INTEGER NOT NULL,  -- TaxProcessor.marketAddress() == vault
-  -- 决策 #17：层内 FeeSplitter 的快照（单位是层内 BAC，与上面的 BNB 字段不同单位，不得相加）
+  -- 决策 #17：层内 FeeSplitter 的快照（单位是层内 AGNT，与上面的 BNB 字段不同单位，不得相加）
   splitter_balance        TEXT NOT NULL DEFAULT '0',
   splitter_pool_pending   TEXT NOT NULL DEFAULT '0',   -- 已入池但未领 + carryPool
   splitter_foundation     TEXT NOT NULL DEFAULT '0',   -- foundationBalance()
@@ -595,7 +595,7 @@ Base：`https://95-179-183-132.sslip.io`
   "ok": true,
   "now": 1790000000,
   "layer": {
-    "chainId": 56777,
+    "chainId": 60606,
     "head": 1234567,
     "headTs": 1789999998,
     "blockLagSec": 2,
@@ -641,7 +641,7 @@ Base：`https://95-179-183-132.sslip.io`
     ]
   },
   "gas": {
-    "schemaNote": "决策 #17：gas 费按出块者分账。单位全部是层内 BAC wei，不是 BNB。",
+    "schemaNote": "决策 #17：gas 费按出块者分账。单位全部是层内 AGNT wei，不是 BNB。",
     "officialBlockValidatorBps": 1000,
     "validatorBlockValidatorBps": 5000,
     "lastAnchoredEpoch": 20717,
@@ -688,7 +688,7 @@ diff = (bscTotalIssued − bscTotalExited)
 旧写法直接拿它对 `issued − exited`，**从第一笔交易起 `diff != 0` 且单调发散** ——
 网站上那个「自己复算」的旗舰卖点会显示一个永远对不上的数字，
 `02` §5.4 的 5 分钟告警会永久误报，于是运维一定会把它关掉，而那条告警本来是发现中继超发的**唯一**手段。
-（创世的 `OPERATOR_FLOAT = 1,000 BAC` 已经由运营方在 BSC 侧锁了等额 BAC，所以它同时出现在等式两边，不用单列。
+（创世的 `OPERATOR_FLOAT = 1,000 AGNT` 已经由运营方在 BSC 侧锁了等额 AGNT，所以它同时出现在等式两边，不用单列。
 `/api/health` 必须把 `feeSinkBalance`、`feeSplitterBalance` 和 `validatorBalances[]` 分别列出来，让人能逐项核。
 **决策 #17 把 `FeeSplitter` 加进了这个式子**：归集进分账合约、但还没被领走的 gas 费停在 `0x…0104` 名下，
 漏减它会让 `diff` 从第一笔归集起恒为正，结果和当初漏减小费是完全同一个错。
@@ -732,7 +732,7 @@ diff = (bscTotalIssued − bscTotalExited)
                   "rewardBalance": "300000000000000000", "lifetimeFunded": "800000000000000000",
                   "lifetimePaid": "500000000000000000" },
   "gasFees": {
-    "unit": "BAC",
+    "unit": "AGNT",
     "officialBlockValidatorBps": 1000, "validatorBlockValidatorBps": 5000,
     "lifetimeReceived": "18720000000000000000000",
     "lifetimeRemitted": "18650000000000000000000",
@@ -754,7 +754,7 @@ diff = (bscTotalIssued − bscTotalExited)
 
 **`gasFees` 和 `treasury` 是两回事，网站上绝不允许放在同一个总额里：**
 `treasury` 是 **BSC 上的 BNB 税收**（桥池 / 节点基金，决策 #4）；
-`gasFees` 是 **层内的 BAC gas 费**（验证者池 / 基金会，决策 #17）。
+`gasFees` 是 **层内的 AGNT gas 费**（验证者池 / 基金会，决策 #17）。
 两者单位不同、链不同、分法不同，相加是错的；任何把它们合成一个「总收入」的展示都不允许。
 
 ### 3.3 `GET /api/feed`
@@ -841,7 +841,7 @@ diff = (bscTotalIssued − bscTotalExited)
 | `GET /api/epochs` | `from`,`to`,`limit`（默认最近 30） | `{schema:"bac/epochs/1", items:[ epochs 表的一行 + attestations 摘要 ]}` |
 | `GET /api/epoch/{n}` | — | 单个纪元完整信息 + `attestations:[{validator,nodeId,exitRoot,l2Block,l2BlockHash,weight,agreeing}]` |
 | `GET /api/epoch/{n}/leaves` | — | `{schema:"bac/leaves/1", epoch, exitRoot, leaves:[{exitId,agentId,to,credits,leaf}], proofFor: "见下"}` —— **构造 merkle 证明所需的全部数据；任何人也能从 `L2Bridge.ExitBurned` 日志自己重建** |
-| `GET /api/epoch/{n}/proof/{exitId}` | — | `{schema:"bac/proof/2", exitId, agentId, to, credits, anchorEpoch, bornEpoch, leaf, proof:["0x…"], exitRoot, bridge, layerChainId:56777}`，直接喂给 `BacBridge.claimExit(anchorEpoch, exitId, agentId, to, credits, proof)`。**`anchorEpoch` 是这笔退出最终被哪个锚点收录**（被 veto 的纪元里的退出会在后续纪元重报，`anchorEpoch != bornEpoch`）；`bornEpoch` 只是展示信息，**不进叶子哈希** |
+| `GET /api/epoch/{n}/proof/{exitId}` | — | `{schema:"bac/proof/2", exitId, agentId, to, credits, anchorEpoch, bornEpoch, leaf, proof:["0x…"], exitRoot, bridge, layerChainId:60606}`，直接喂给 `BacBridge.claimExit(anchorEpoch, exitId, agentId, to, credits, proof)`。**`anchorEpoch` 是这笔退出最终被哪个锚点收录**（被 veto 的纪元里的退出会在后续纪元重报，`anchorEpoch != bornEpoch`）；`bornEpoch` 只是展示信息，**不进叶子哈希** |
 | `GET /api/rate` | — | `{schema:"bac/rate/1", weiPerCredit, poolBalance, owedTotal, creditsOutstanding, lastPot, note:"估算 · 不承诺任何金额"}`。SDK 在 `exit()` 之前**必须**读它并在兑付率过低（`credits × rate == 0`）时警告：`claimExit` 会 revert，积分已在层内销毁但可以等池子变厚再领 |
 | `GET /api/validators` | — | `{schema:"bac/validators/1", items:[{nodeId,validator,payout,enodeURI,active,strikes,staked,lastEpoch,agreedEpochs,disputedEpochs,lifetimeClaimed}], totalStaked, rewardBalance}` |
 | `GET /api/treasury` | `from`,`to`（时间戳） | `{schema:"bac/treasury/1", items:[ treasury 表的行 ]}` |
@@ -852,7 +852,7 @@ diff = (bscTotalIssued − bscTotalExited)
 
 **三条硬规则，所有实现与前端都必须遵守：**
 
-1. **单位一律是层内 BAC（wei 十进制字符串），不是 BNB。** 每个返回体带 `"unit": "BAC"`，前端渲染必须显示单位。
+1. **单位一律是层内 AGNT（wei 十进制字符串），不是 BNB。** 每个返回体带 `"unit": "AGNT"`，前端渲染必须显示单位。
 2. **每个数字都要能说出「它从哪来」。** 来自 FINAL 锚点的标 `"anchored": true`（见证人在四元组里签过）；
    只来自官方节点实时数据的标 `"anchored": false`，网站**必须**在旁边写「未锚定 · 仅来自官方节点」。
 3. **不做任何收益预测。** 端点只返回已发生的金额与规则常量，不返回年化、不返回预估收入。
@@ -862,7 +862,7 @@ diff = (bscTotalIssued − bscTotalExited)
 ```json
 {
   "schema": "bac/fees/1",
-  "unit": "BAC",
+  "unit": "AGNT",
   "rules": {
     "zeroBaseFee": true,
     "minGasPrice": "1000000000",
@@ -908,7 +908,7 @@ diff = (bscTotalIssued − bscTotalExited)
 ```json
 {
   "schema": "bac/fee-epoch/1",
-  "unit": "BAC",
+  "unit": "AGNT",
   "epoch": 20717,
   "anchored": true,
   "anchorState": "FINAL",
@@ -964,7 +964,7 @@ diff = (bscTotalIssued − bscTotalExited)
 ```json
 {
   "schema": "bac/proposers/1",
-  "unit": "BAC",
+  "unit": "AGNT",
   "window": { "from": 20688, "to": 20717 },
   "items": [
     { "proposer": "0x…", "validator": null, "official": true,
@@ -985,17 +985,17 @@ diff = (bscTotalIssued − bscTotalExited)
 "earned": {
   "bnbRewards":      { "unit": "BNB", "chain": "bsc",   "lifetimeClaimed": "480000000000000000",
                        "withheld": "0", "source": "ValidatorStaking.fundRewards（运营方注入，不是合约强制分账）" },
-  "gasPool":         { "unit": "BAC", "chain": "layer", "lifetimeClaimed": "43000000000000000000",
+  "gasPool":         { "unit": "AGNT", "chain": "layer", "lifetimeClaimed": "43000000000000000000",
                        "pending": "192857142857142857", "attend30": 30,
                        "source": "FeeSplitter 验证者池（官方出块 gas 费的 10%，按 质押 × 出勤 分）" },
-  "gasSelfProposed": { "unit": "BAC", "chain": "layer", "lifetimeKept": "0", "blocks": 0,
+  "gasSelfProposed": { "unit": "AGNT", "chain": "layer", "lifetimeKept": "0", "blocks": 0,
                        "source": "自己出的块的 50%，直接留在自己的层内 EOA，不经过 FeeSplitter" }
 },
 "remittance": {
   "proposerAddr": null, "layerPayout": "0x…",
   "rights": false, "qualifyStreak": 12, "qualifyTarget": 30,
   "cumOwed": "0", "cumRemitted": "0", "arrears": "0", "shortfall": false,
-  "rule": "shortfall ⇔ cumRemitted × 10000 < cumOwed × 9950 且 cumOwed − cumRemitted > 0.05 BAC"
+  "rule": "shortfall ⇔ cumRemitted × 10000 < cumOwed × 9950 且 cumOwed − cumRemitted > 0.05 AGNT"
 }
 ```
 
@@ -1003,7 +1003,7 @@ diff = (bscTotalIssued − bscTotalExited)
 `Σ_epoch proposerIncome(epoch, 它的 proposer 地址).gasIncome × 5000 / 10000`。
 口径要和 `/api/fees/{epoch}` 的 `selfKept` 逐字一致。
 
-**这三笔钱在网站上必须分三行显示，并各自带单位与链名。** 把 BNB 奖励和 BAC gas 分成合并成一个「总收益」是错的，
+**这三笔钱在网站上必须分三行显示，并各自带单位与链名。** 把 BNB 奖励和 AGNT gas 分成合并成一个「总收益」是错的，
 也是这份规格里唯一一处明确禁止的 UI 做法。
 
 #### 既有端点的增量
@@ -1103,7 +1103,7 @@ export interface BacAddresses {
   l2Bridge: string; l2Gate: string; agentBook: string;
 }
 
-export const LAYER_CHAIN_ID = 56777;
+export const LAYER_CHAIN_ID = 60606;
 export const BSC_CHAIN_ID = 56;
 export const ADDRESSES_MAINNET: BacAddresses;   // 发射后填入；发射前全部是 "0x0"
 
@@ -1125,7 +1125,7 @@ export interface JoinOptions {
   bscKey: string;                  // 需要 >= ENTRY_DEPOSIT(0.02) BNB 付押金 + 一点 gas
   card: AgentCard;
   agentWallet?: string;            // 层内钱包；不给则由 SDK 生成并返回私钥
-  lockAmount?: bigint;             // 转正后立刻桥进多少 BAC（需要先 approve）
+  lockAmount?: bigint;             // 转正后立刻桥进多少 AGNT（需要先 approve）
   onProgress?: (e: JoinProgress) => void;
 }
 
@@ -1290,7 +1290,7 @@ bac-node gas-income --epoch 20716 [--proposer 0x…]
                                     # 并打印 proposerIncomeRoot（与锁定在承诺里的那个同一个算法）
 bac-node pool --epoch 20716         # 查自己在该纪元的 weight / attend30 / 应得金额
 bac-node pool-claim --epoch 20716 --to 0x…
-                                    # 层内 FeeSplitter.claimPool（单位是层内 BAC）
+                                    # 层内 FeeSplitter.claimPool（单位是层内 AGNT）
 bac-node remit --epoch 20716        # 只在拿到出块资格后有意义：
                                     # 算出自己该纪元的 gasIncome，把 50% 转进 FeeSplitter
                                     # 默认只打印将要发的交易，--yes 才真发
@@ -1303,7 +1303,7 @@ bac-node remit-status               # 查 cumOwed / cumRemitted / arrears / shor
 epoch 20716
   local   exitRoot 0xab…  proposerIncomeRoot 0x71…  l2Block 1234501  l2BlockHash 0x9c…
   onchain exitRoot 0xab…  proposerIncomeRoot 0x71…  l2Block 1234501  l2BlockHash 0x9c…
-  gas     received 54.000000 BAC   remitted 54.000000 BAC   gap 0
+  gas     received 54.000000 AGNT  remitted 54.000000 AGNT  gap 0
   MATCH
 ```
 
@@ -1327,7 +1327,7 @@ epoch 20716
 1. **我们不发任何官方 DEX、官方代币、官方工具合约。** 链出厂就是空的，只有三个创世系统合约
    （`L2Bridge 0x…0101` / `L2Gate 0x…0102` / `AgentBook 0x…0103`）加决策 #17 的 `FeeSplitter 0x…0104`。
    本节的一切都只是**读**：把 agent 自己部署的任意合约解码出来给人看。
-   任何「顺手给 agent 提供一个官方 Router / 官方 WBAC / 官方工厂」的提议都不在范围内，必须拒绝 ——
+   任何「顺手给 agent 提供一个官方 Router / 官方 WAGNT / 官方工厂」的提议都不在范围内，必须拒绝 ——
    一旦有了官方合约，这条链就不再是「agent 自己造的」，而且我们会立刻变成那套合约的事实背书方。
 2. **这里全部是启发式判定，会漏也会错。** 判定只看行为（日志形状 + `eth_call` 应答），不看源码、不看 ABI、不看谁部署的。
    一个 agent 完全可以造出一个我们分不出来的代币或交易所（不发标准事件、用自定义接口、把状态藏在另一个合约里）。
@@ -1339,7 +1339,7 @@ epoch 20716
    页面一律标注「由部署者自己写的，本站不核实」。**同名同符号不合并、不去重、不打假标签**，只按地址区分；
    同名时页面显示「链上还有 N 个同名代币」并给出全部地址。
 5. **单位。** 代币金额一律是**该代币自己的最小单位**的十进制字符串，随行返回 `decimals` 让前端自己格式化。
-   它**不是** BAC 的 wei，**不得**和 BAC 金额、BNB 金额放进同一个合计里（与 §3.2 里 `gasFees` / `treasury` 不许相加是同一条纪律）。
+   它**不是** AGNT 的 wei，**不得**和 AGNT 金额、BNB 金额放进同一个合计里（与 §3.2 里 `gasFees` / `treasury` 不许相加是同一条纪律）。
    `decimals` 未知时返回 `null`，前端必须显示原始最小单位数字并注明「decimals 未知」，不许默认当 18。
 
 ### 7.1 代币检测（ERC-20 形状）
@@ -1575,7 +1575,7 @@ CREATE TABLE tokens (
   name           TEXT,                  -- agent 自己写的，不可信；出库一律转义
   symbol         TEXT,
   decimals       INTEGER,               -- NULL = 没实现或返回垃圾值（X3）
-  total_supply   TEXT NOT NULL DEFAULT '0',   -- 该代币最小单位的十进制字符串，**不是 BAC 的 wei**
+  total_supply   TEXT NOT NULL DEFAULT '0',   -- 该代币最小单位的十进制字符串，**不是 AGNT 的 wei**
   supply_block   INTEGER,               -- total_supply 读自哪个高度
   supply_stale   INTEGER NOT NULL DEFAULT 0,
   creator        TEXT,                  -- 部署者地址，未知为 NULL
@@ -1798,7 +1798,7 @@ CREATE INDEX liquidity_events_pair ON liquidity_events(pair, block DESC, log_ind
 "detection": {
   "method": "heuristic",
   "note": "本链没有官方 DEX、官方代币或官方工具合约。这一页是把 agent 自己部署的合约按日志形状和 eth_call 应答解出来的结果，规则写在 docs/03-INTERFACES.md §7。它可能漏掉我们没认出来的东西，也可能认错。",
-  "rulesUrl": "https://bnbagentchain-scan.com/docs/detection",
+  "rulesUrl": "https://agenticchain.vip/docs/detection",
   "unclassifiedContracts": 3
 }
 ```
@@ -1954,7 +1954,7 @@ CREATE INDEX liquidity_events_pair ON liquidity_events(pair, block DESC, log_ind
 }
 ```
 
-`lastPrice` 是 `price_1_per_0` 的 ×10^-18 定点十进制字符串。**返回体里不出现任何法币或 BAC 折算值**（§7.3）。
+`lastPrice` 是 `price_1_per_0` 的 ×10^-18 定点十进制字符串。**返回体里不出现任何法币或 AGNT 折算值**（§7.3）。
 `token*.known == false` 表示这一边没被判成代币（此时 `detectLevel = "partial"`），前端显示地址并注明。
 
 #### `GET /api/pair/{address}`
@@ -2061,7 +2061,7 @@ CREATE INDEX liquidity_events_pair ON liquidity_events(pair, block DESC, log_ind
 
 | 端点 | 增量 |
 |---|---|
-| `GET /api/summary` | 新增顶层 `built`：`{ "tokens": 12, "pairs": 3, "factories": 1, "swaps": 118, "transfers": 640, "unclassifiedContracts": 3, "firstTokenTs": 1789999950, "firstPairTs": 1789999980, "detection": { … } }`。`built` 里**只有计数，没有金额** —— 和 `treasury` / `gasFees` 一样，不得与任何 BAC / BNB 金额合并 |
+| `GET /api/summary` | 新增顶层 `built`：`{ "tokens": 12, "pairs": 3, "factories": 1, "swaps": 118, "transfers": 640, "unclassifiedContracts": 3, "firstTokenTs": 1789999950, "firstPairTs": 1789999980, "detection": { … } }`。`built` 里**只有计数，没有金额** —— 和 `treasury` / `gasFees` 一样，不得与任何 AGNT / BNB 金额合并 |
 | `GET /api/agent/{id}` | 新增 `built`：`{ "tokens": [ …它发的币… ], "pairs": [ …它建的池… ], "factories": [ … ] }`；新增 `trades`：`{ "swapCount": 41, "firstTs": …, "lastTs": …, "pairs": [ { "address": "0x…", "swaps": 30 } ], "recent": [ …最多 10 条 swaps 元素… ] }`；新增 `holdings`：`[{ "token": "0x…", "symbol": "FUEL", "decimals": 18, "balance": "…", "shareBps": 1200, "balanceDrift": false }]`（按 `balance_sort` 取前 20，附 `holdingsTruncated: true\|false`）。已有的 `contracts[]` 每个元素追加 `classified` / `classifiedZh` / `symbol` |
 | `GET /api/agents` | 每个元素追加 `tokensIssued` / `pairsCreated` / `swapCount` 三个计数；`sort` 新增 `tokens` / `swaps` 两个取值 |
 | `GET /api/contracts` | 见 §7.6 最后一段：新增 `address` / `classified` 两个参数，元素追加 `classified` / `classifiedZh` / `symbol` |
@@ -2223,6 +2223,6 @@ API 的字段名与取值（`status: 1`、`statusName: "CHALLENGED"`、`/api/age
 4. **ERC-8004 registration JSON 的最终字段**（`SDK.cardJson()`）需对照 https://eips.ethereum.org/EIPS/eip-8004 原文核一遍。
 5. **`/api/epoch/{n}/leaves` 的分页**：单纪元退出数超过几千时需要分页，阈值待定（v1 先不分页，加一条 `exitCount > 2000` 的告警）。
 6. **索引器是否暴露第二套只读镜像**（由某个验证者运行、页面并排显示分歧），属于 v2 路线图，接口形状与本文一致即可。
-7. **§7.6 里 `detection.rulesUrl` 指向的那页解码规则说明**还不存在（暂定 `https://bnbagentchain-scan.com/docs/detection`）。它只是把 §7.1–§7.3 的规则用人话讲一遍，随 UI 轮次一起上；在它上线之前，该字段返回 `null`，前端退化成纯文字说明。
-8. **本文 §3 开头的 Base 仍写着 `https://95-179-183-132.sslip.io`**，而决策 #18（域名那一条）已经买了 `bnbagentchain-rpc.xyz`（`/rpc`、`/api/*`）与 `bnbagentchain-scan.com`（站点）。全文的 Base、`howToCheck` 里的 `--rpc-url`、SDK 默认值要不要一次性改掉（并保留 sslip.io 作 `fallbackRpc` / `fallbackApi`），是一次独立的改动，**不在决策 #19 这轮里顺手做** —— 它会动到 §1、§3、§5 三节和四个包的默认配置。
+7. **§7.6 里 `detection.rulesUrl` 指向的那页解码规则说明**还不存在（暂定 `https://agenticchain.vip/docs/detection`）。它只是把 §7.1–§7.3 的规则用人话讲一遍，随 UI 轮次一起上；在它上线之前，该字段返回 `null`，前端退化成纯文字说明。
+8. **本文 §3 开头的 Base 仍写着 `https://95-179-183-132.sslip.io`**，而决策 #18（域名那一条）已经买了 `agenticchain-rpc.xyz`（`/rpc`、`/api/*`）与 `agenticchain.vip`（站点）。全文的 Base、`howToCheck` 里的 `--rpc-url`、SDK 默认值要不要一次性改掉（并保留 sslip.io 作 `fallbackRpc` / `fallbackApi`），是一次独立的改动，**不在决策 #19 这轮里顺手做** —— 它会动到 §1、§3、§5 三节和四个包的默认配置。
 9. **`decisions.md` 里有两行都编号 #18**（域名、术语改口）。本文引用术语那一条时写的是「决策 #18（术语）」。编号要不要重排由决策文档自己定，本文跟着改即可。

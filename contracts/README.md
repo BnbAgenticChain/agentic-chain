@@ -26,49 +26,49 @@ It is `BacBridge.OWNER_POWER_NOTICE`, and `BacBridge.description()` returns it v
 is the deployer hot wallet `0x934a…2844` (decision #33). Two consequences that go beyond that
 sentence and are disclosed separately:
 
-* **Standing allowances.** Whatever code the owner puts behind the proxy can also spend every BAC
-  allowance a user has left on the bridge address, BAC that never entered the pool included.
+* **Standing allowances.** Whatever code the owner puts behind the proxy can also spend every AGNT
+  allowance a user has left on the bridge address, AGNT that never entered the pool included.
   `description()` and `lock`'s NatSpec say: approve exactly the amount, right before `lock`, and
   reset the allowance if `lock` fails. (The SDK does not do this yet — `docs/04` §0-i.)
 * `pause()`, the watchdog, the halt / escape path and the two-bucket books are all still
   implemented, but none of them is a backstop above the owner (decision #29b).
 
 These statements are **false** and must not appear anywhere: 「桥池只用于 agent 退出兑付，项目方和
-Flap Guardian 都动不了」「进桥的 BAC 永久锁死」「不可升级」「owner 没有任何路径能移动桥池资金」.
+Flap Guardian 都动不了」「进桥的 AGNT 永久锁死」「不可升级」「owner 没有任何路径能移动桥池资金」.
 
 ### 1.2 BSC side — tax in, bridge, node fund
 
 | Contract | File | Role |
 |---|---|---|
 | `BacTaxRouter` | `src/BacTaxRouter.sol` | The Flap `beneficiary` of the plain-Portal launch (decision #30, `newTokenV6`). `receive()` only books the BNB (one SSTORE, must succeed under `call{gas: 50_000}`); permissionless `settle()` pushes 50/50 to `BacBridge.acceptRelease()` and `BacNodeFund.acceptRelease()`, each with `PUSH_GAS = 100_000`. Failed pushes are booked in `stuckBridge` / `stuckNodeFund` and `retryPush()` delivers them. **No owner, no upgrade, no setter, and no `description()`** (decision #32: this contract is immutable, so it freezes no text). Its constructor refuses a bridge / node fund bound to another token, which also rejects the bare bridge implementation. |
-| `BacBridge` | `src/BacBridge.sol` | Behind an OpenZeppelin `ERC1967Proxy` (UUPS). **Always use the proxy address.** Entry `lock(agentId, amount)` is gated on holding an ERC-8004 identity (decision #31) on `0x8004A169…a432`; the first depositor of an id becomes its `agentController`, and only that controller may lock more under the id (hand-over via `setAgentController`). Exits: `claimExit` (Merkle proof against a FINAL `ChainAnchor` anchor, rate locked at claim time), `settleEpoch` (sequential, daily release rate / 144), `collect` (paid in bought-back BAC). `buyback()` spends a bounded slice of the BNB bucket on the Flap curve or PancakeSwap V2. Owner: `upgradeTo` / `upgradeToAndCall`, `emergencyWithdrawBnb`, `emergencyWithdrawToken` — all logged (`BridgeUpgraded`, `EmergencyWithdraw`), the books are never written down, `shortfall()` shows the hole. `renounceOwnership` is disabled. |
+| `BacBridge` | `src/BacBridge.sol` | Behind an OpenZeppelin `ERC1967Proxy` (UUPS). **Always use the proxy address.** Entry `lock(agentId, amount)` is gated on holding an ERC-8004 identity (decision #31) on `0x8004A169…a432`; the first depositor of an id becomes its `agentController`, and only that controller may lock more under the id (hand-over via `setAgentController`). Exits: `claimExit` (Merkle proof against a FINAL `ChainAnchor` anchor, rate locked at claim time), `settleEpoch` (sequential, daily release rate / 144), `collect` (paid in bought-back AGNT). `buyback()` spends a bounded slice of the BNB bucket on the Flap curve or PancakeSwap V2. Owner: `upgradeTo` / `upgradeToAndCall`, `emergencyWithdrawBnb`, `emergencyWithdrawToken` — all logged (`BridgeUpgraded`, `EmergencyWithdraw`), the books are never written down, `shortfall()` shows the hole. `renounceOwnership` is disabled. |
 | `BacBridgeExtension` | `src/BacBridge.sol` | Not deployed by hand: the `BacBridge` implementation's constructor deploys it (`EXTENSION()`), and the bridge reaches it by DELEGATECALL for `settleEpoch`, the owner withdrawals, `setAgentController`, the watchdog tools (`pause`, `unpause`, `revokeEpochOwed`, `armEscape`, `cancelEscapeArm`) and the halt / escape path (`checkHalt`, `claimOwedAfterHalt`, `sweepImmatureOwed`, `escapeCollect`). It exists only because one contract would exceed EIP-170. It refuses direct calls and refuses to be an upgrade target. |
 | `BacNodeFund` | `src/BacNodeFund.sol` | The official node fund. Permissionless `acceptRelease()` in, two-step-ownable `withdraw` out: its owner can withdraw this half at any time (decision #10). |
 
-How the bridge's money works, in one paragraph: BAC locked on entry sits in `lockedBac`, which no
-exit path reads; exits are paid only from `buybackBac`, the BAC bought back with the bridge's tax
+How the bridge's money works, in one paragraph: AGNT locked on entry sits in `lockedBac`, which no
+exit path reads; exits are paid only from `buybackBac`, the AGNT bought back with the bridge's tax
 BNB, and every exit payout checks that what stays behind still covers the unburned deposits.
-An exit locks `credits * (buybackBac - owedTotal) / outstanding` BAC at claim time; each settled
+An exit locks `credits * (buybackBac - owedTotal) / outstanding` AGNT at claim time; each settled
 epoch releases a pot of `(buybackBac - reservedTotal) * dailyBps / (10000 * 144)`, capped at the
 owed no pot has reached yet, as the same fraction of every address's unreleased owed (the
 `ReleasePoint` index). `collect` is limited to 10% of the release rate's per-epoch amount per
-elapsed epoch (up to 144). Taking BAC out costs roughly 4% more than BNB would (decision #24b).
+elapsed epoch (up to 144). Taking AGNT out costs at least 2% more than BNB would, about 5% with wide slippage (decision #24b).
 
 ### 1.3 BSC side — the anchor and its witnesses
 
 | Contract | File | Role |
 |---|---|---|
 | `ChainAnchor` | `src/ChainAnchor.sol` | One anchor per 10-minute epoch from the relayer; FINAL after the 120-second wait (decision #25), or VETOED / DISPUTED. `releaseBpsFor(epoch)` returns 200 / 350 / 500 bps **per day** by independent witness count; `haltReason()` is what the bridge polls. Check #7 (`cumulativeCredited + creditedInEpoch <= bridge.totalCreditsIssued()`) is only as strong as the bridge owner key, since the owner can upgrade the bridge. |
-| `ValidatorStaking` | `src/ValidatorStaking.sol` | BAC staking, node registration and the daily commit-reveal attestation `ChainAnchor` pulls. |
+| `ValidatorStaking` | `src/ValidatorStaking.sol` | AGNT staking, node registration and the daily commit-reveal attestation `ChainAnchor` pulls. |
 
-### 1.4 Layer side (chain id 56777, genesis-predeployed)
+### 1.4 Layer side (chain id 60606, genesis-predeployed)
 
 | Contract | File | Role |
 |---|---|---|
-| `L2Bridge` | `src/layer/L2Bridge.sol` | Credits layer BAC from a BSC `Locked` event; burns it on exit into the leaf `BacBridge.claimExit` verifies. `EPOCH = 600`, matching `ChainAnchor`. `BSC_BRIDGE` must be the proxy address. |
+| `L2Bridge` | `src/layer/L2Bridge.sol` | Credits layer AGNT from a BSC `Locked` event; burns it on exit into the leaf `BacBridge.claimExit` verifies. `EPOCH = 600`, matching `ChainAnchor`. `BSC_BRIDGE` must be the proxy address. |
 | `L2Gate` | `src/layer/L2Gate.sol` | Wallet → agent-id admission. Its old feed (`AgentRegistry`) was deleted by #31 and its code is not yet changed to match; how it should be fed from `BacBridge.Locked` is an open decision that has to be settled before genesis (see the contract header). |
 | `AgentBook` | `src/layer/AgentBook.sol` | The canonical `Action` event, per-window publish cap. |
-| `WBAC` | `src/layer/WBAC.sol` | `Wrapped BAC` / `WBAC`, WETH9-shaped (decisions #22 / #26). |
+| `WAGNT` | `src/layer/WBAC.sol` | `Wrapped AGNT` / `WAGNT`, WETH9-shaped (decisions #22 / #26). |
 
 ### 1.5 Interfaces and helpers
 
@@ -123,7 +123,7 @@ the fork suites (they fall back to a public RPC when `BSC_RPC_URL` is unset).
 | `ChainAnchor` | `test/ChainAnchor.t.sol` | 40 | post / finalize / veto / dispute, check table, `releaseBpsFor` |
 | `ValidatorStaking` | `test/ValidatorStaking.t.sol` | 38 | staking, commit-reveal, rewards |
 | Layer | `test/Layer.t.sol` | 35 | `L2Bridge`, `L2Gate`, `AgentBook` |
-| `WBAC` | `test/WBAC.t.sol` | 19 | wrap / unwrap / ERC-20 |
+| `WAGNT` | `test/WBAC.t.sol` | 19 | wrap / unwrap / ERC-20 |
 | Fork launch | `test/BacForkLaunch.t.sol` | 9 | the whole plain-Portal path on a BSC mainnet fork: deploy order, launch with the locked salt, real tax → router → split, real ERC-8004 entry, anchor, buyback, exit, upgrade, emergency withdrawal, graduation |
 | Fork smoke | `test/smoke/ForkSmoke.t.sol` | 5 | Portal version, ERC-8004 registry implementation, PancakeSwap, WBNB |
 
@@ -159,7 +159,7 @@ EIP-170 runtime limit 24,576 bytes. `forge build --sizes`, 2026-09-23.
 | `L2Bridge` | 4,823 | 19,753 |
 | `AgentBook` | 2,972 | 21,604 |
 | `BacTaxRouter` | 2,867 | 21,709 |
-| `WBAC` | 1,807 | 22,769 |
+| `WAGNT` | 1,807 | 22,769 |
 | `L2Gate` | 1,695 | 22,881 |
 | `BacNodeFund` | 1,651 | 22,925 |
 

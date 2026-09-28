@@ -10,8 +10,9 @@ Entry is gated on holding an identity in the ERC-8004 registry. Nothing else abo
 inspected: not its model, not its endpoint, not its behaviour. The gate exists so that every unit
 of gas on the chain traces back to a registered identity, and that is the whole of what it does.
 
-**Status: the BSC contracts are deployed, the BAC token has not launched.** You can do Step 1 today.
-Step 2 onward needs BAC, which does not exist yet.
+**Status: the BSC contracts are being redeployed and the AGNT token has not launched.** You can do
+Step 1 today. Step 2 onward needs AGNT and the new bridge address, both published in the README's
+Status section at launch.
 
 ---
 
@@ -86,14 +87,15 @@ So your agent has to remember its own `agentId` and pass it explicitly. That is 
 
 ---
 
-## Step 2 — Lock BAC (needs the token, which has not launched)
+## Step 2 — Lock AGNT (needs the token, which has not launched)
 
 ```solidity
-IERC20(BAC).approve(bridge, amount);
+IERC20(AGNT).approve(bridge, amount);
 BacBridge.lock(agentId, amount);
 ```
 
-Bridge: `0x2129f336ff42821afa27fE5928Dec36Ba90d3508`
+Bridge: published at launch. Do not send anything to an address that is not listed in the README's
+Status section.
 
 `lock` reverts unless `Erc8004Gate.holds(registry, msg.sender, agentId)` — you must hold the
 identity you name, checked forwards. `ownerOf` on the registry reverts for an id that was never
@@ -102,7 +104,7 @@ failure.
 
 Three behaviours to build around:
 
-**You are credited what arrives, not what you sent.** BAC is a tax token. `lock` measures the
+**You are credited what arrives, not what you sent.** AGNT is a tax token. `lock` measures the
 bridge's balance before and after the transfer and credits the difference. If the transfer is taxed,
 your credit is the post-tax amount. Do not assume `credits == amount`.
 
@@ -122,7 +124,7 @@ About a minute end to end.
 ## Step 3 — You are in
 
 Your credits are the layer's native coin. Pay gas with them, deploy contracts, call contracts,
-trade. Chain 56777, RPC `https://bnbagentchain-rpc.xyz/rpc`. See
+trade. Chain 60606, RPC `https://agenticchain-rpc.xyz/rpc`. See
 [quickstart.md](quickstart.md) for client configuration and the two things that surprise people:
 transactions are final on inclusion, and a zero base fee means your whole fee is a tip to the block
 proposer.
@@ -133,7 +135,7 @@ on funding, not on action.
 
 There is no official DEX, router, market or stablecoin, and there will not be. Genesis carries three
 system contracts, a fee-splitting contract, and three neutral tools: Multicall3, the CREATE2
-deterministic deployer, and Wrapped BAC at `0x..0106`. If you want a market, deploy one. Other
+deterministic deployer, and Wrapped AGNT at `0x..0106`. If you want a market, deploy one. Other
 agents will find it by reading blocks; the explorer decodes tokens, pairs and swaps by behaviour
 alone, with no listing, no review and no official label.
 
@@ -146,12 +148,12 @@ L2Bridge.exit{value: credits}(bscRecipient)   // burns the credits
   → wait out the current epoch                  at most 10 minutes (EPOCH = 600)
   → the anchor is posted
   → wait ANCHOR_WAIT = 120 seconds
-BacBridge.claimExit    // locks a BAC-denominated claim at that moment's rate
+BacBridge.claimExit    // locks an AGNT-denominated claim at that moment's rate
 BacBridge.collect      // pays it down under a daily cap
 ```
 
 Twelve to thirteen minutes gets you a **locked claim, not the money.** Trading tax arrives as BNB,
-half goes to the bridge, and the bridge spends it buying BAC on the market; exits are paid out of
+half goes to the bridge, and the bridge spends it buying AGNT on the market; exits are paid out of
 that bought-back stock, pro rata, under a daily release cap. A holder of a tenth of outstanding
 credits needs roughly a month to be ninety percent paid. No amount is promised and it can be far
 below what went in.
@@ -164,10 +166,11 @@ below what went in.
 
 It does not mean the holder is an AI. `register()` is callable by anyone, the identity is a plain
 transferable ERC-721, and a person can mint one in a single transaction. The bridge says so itself,
-as a `string public constant` you can read:
+as a `string public constant` you can read once the bridge address is published
+(`BRIDGE=<bridge address>`):
 
 ```bash
-cast call 0x2129f336ff42821afa27fE5928Dec36Ba90d3508 \
+cast call $BRIDGE \
   "IDENTITY_LIMIT_NOTICE()(string)" --rpc-url https://bsc-dataseed.bnbchain.org
 ```
 
@@ -177,7 +180,7 @@ cast call 0x2129f336ff42821afa27fE5928Dec36Ba90d3508 \
 Read the other one too, while you are there:
 
 ```bash
-cast call 0x2129f336ff42821afa27fE5928Dec36Ba90d3508 \
+cast call $BRIDGE \
   "OWNER_POWER_NOTICE()(string)" --rpc-url https://bsc-dataseed.bnbchain.org
 ```
 

@@ -1,4 +1,4 @@
-# BAC 索引器 + 浏览器 API
+# AGNT 索引器 + 浏览器 API
 
 实现 `docs/03-INTERFACES.md` 的 **§2（SQLite 库）**、**§3（HTTP API）**、**§4（层内动作的规范事件模式）**、
 **§7（agent 造出来的东西：代币 / 交易对 / 成交，决策 #19）**。
@@ -139,7 +139,7 @@ src/economy/index.js      主流程：候选收集 -> 探测 -> 一个事务里�
 - **`BAC_ADDR_BRIDGE` 必须是代理**：地址上有代码但 EIP-1967 实现槽是空的（多半填成了实现合约）时打 `bridge_not_proxy`，
   `/api/health.bridge.isProxy = false`，它的 view 一个都不读、不写 treasury、不拿来核接线、对账里的 BSC 发行量是 `null` ——
   实现合约自己的存储是空的，读出来的「0 余额、没有 owner」不是桥的真状态，它也从来不发 `Locked` 事件。
-- **`shortfall`**：代币发射后调 `BacBridge.shortfall()`；它调不通就用 `BAC.balanceOf(bridge)` 按同一公式在链下重算，
+- **`shortfall`**：代币发射后调 `BacBridge.shortfall()`；它调不通就用 `AGNT.balanceOf(bridge)` 按同一公式在链下重算，
   也读不到就是 `null`（绝不拿账面 `bacAccounted` 冒充缺口）。
 - **ERC-8004 身份读数**：`tokenURI` 按 `bytes` 解、宽松转 UTF-8 —— 持有人往注册文件里塞非法 UTF-8 只会让它自己记成
   `unparsable`，不会卡住别的身份；某一个身份解码失败只记在它自己身上，这一轮接着读别的，下一轮它排在最后。
@@ -203,7 +203,7 @@ layerCirculating = genesisSupply − B(L2Bridge) − B(FeeSink) − B(FeeSplitte
 `GET /api/fees` · `GET /api/fees/{epoch}` · `GET /api/proposers`，外加 `/api/health` 的 `gas` 块与
 `/api/summary` 的 `gasFees` 块。三条硬规则逐字照做：
 
-1. 单位一律是层内 BAC 的 wei 十进制字符串，每个返回体带 `"unit": "BAC"`；
+1. 单位一律是层内 AGNT 的 wei 十进制字符串，每个返回体带 `"unit": "AGNT"`；
 2. 来自 FINAL 锚点的数标 `anchored: true`，只来自官方节点实时数据的标 `false`；
    **没有锚点时一律返回 `"0"`，绝不拿实时数冒充已锚定的数**；
 3. 不做任何收益预测（有一条测试断言返回体里不出现 apy / annual / estimated / forecast）。
@@ -243,7 +243,7 @@ layerCirculating = genesisSupply − B(L2Bridge) − B(FeeSink) − B(FeeSplitte
    这里按 `02` 取 **512**（字段名不变）。
 3. **`/api/validators` 没有对应的表**（§2 里没有 validators 表），所以它是从 `decoded_events` + `attestations`
    现算出来的。字段名与 §3.6 的表格一致。
-4. **`/api/rate` 的 `bacPerCredit`**（决策 #24：退出兑付的是回购来的 BAC，单位 BAC）按 `BacBridge.currentRate()` 的口径算
+4. **`/api/rate` 的 `bacPerCredit`**（决策 #24：退出兑付的是回购来的 AGNT，单位 AGNT）按 `BacBridge.currentRate()` 的口径算
    （`free × 1e18 / outstanding`，`free = buybackBac − owedTotal`，`outstanding = totalCreditsIssued − totalCreditsExited`，
    outstanding 为 0 时是 0）。读得到链上 `currentRate()` 就用链上的，否则用同一次读数的四个输入现算；
    合约没部署或者一个读数都没有时是 `null`。它是**估算**，`note` 原样写「估算 · 不承诺任何金额」。

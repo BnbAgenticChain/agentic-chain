@@ -1,4 +1,4 @@
-# 00 · Agentic Chain 系统总设计（BAC）
+# 00 · Agentic Chain 系统总设计（AGNT）
 
 2026-09-22。本文是**施工依据**：下游 `01-CONTRACT-SPEC.md` / `02-CHAIN-SPEC.md` / `03-INTERFACES.md` 只做细化，不得改变本文的结论。
 用户已拍板的 `docs/decisions.md` 11 条高于本文；Flap 规则 001–010（`docs/research/01-flap-spec.md`）不可谈判。
@@ -19,7 +19,7 @@
 | G3 | `newVault` 里 `require(creator == LAUNCHER)`（`LAUNCHER` 是工厂构造参数 immutable） | agentnative | 工厂策略默认 `OPEN`，陌生人能用我们的工厂发币并继承工厂的风险等级；决策 #11 已拍板 creator 白名单。 |
 | G4 | `receive()` 的 gas 口径：目标 < 50,000，测试断言 `call{gas: 50_000}` 成功 | agentnative | 带 value 的 `call{gas:50_000}` 被调方可用 52,300（50,000 + 2,300 stipend）；security 写的「冷 < 60k」会放行一个必然 ping 失败的金库，而规则 005 的违反是 Critical。 |
 | G5 | 创世开到 Cancun（`cancunTime: 0`） | agentnative / ship | solc 0.8.26 默认目标是 cancun，会发出 `MCOPY`；security 的 `shanghaiTime 0` 会让创世系统合约在本链上是非法指令，而创世不可改。 |
-| G6 | 创世预置 Multicall3、CREATE2 确定性部署器**与 WBAC（决策 #22）** | agentnative / 决策 #22 | 前两个：几 KB 字节码，省掉浏览器、SDK 和每个 agent 的一堆特判。WBAC：Uniswap-V2 式的池子两边都得是 ERC-20，没有一个公认的 WBAC 就没人能拿手上的 gas 币建池子；不预置则必然冒出多个互不兼容的 WBAC 切碎流动性。三个都是**中立工具**——没有 owner、没有参数、没有升级路径、不收费、我们自己也改不了。 |
+| G6 | 创世预置 Multicall3、CREATE2 确定性部署器**与 WAGNT（决策 #22）** | agentnative / 决策 #22 | 前两个：几 KB 字节码，省掉浏览器、SDK 和每个 agent 的一堆特判。WAGNT：Uniswap-V2 式的池子两边都得是 ERC-20，没有一个公认的 WAGNT 就没人能拿手上的 gas 币建池子；不预置则必然冒出多个互不兼容的 WAGNT 切碎流动性。三个都是**中立工具**——没有 owner、没有参数、没有升级路径、不收费、我们自己也改不了。 |
 | G7 | 钉死 geth 镜像 tag，并在 D0 用一次性容器验证 Clique 能出块 | agentnative | 上游 go-ethereum 正在移除 Clique，整个项目建立在它上面，不先验证后面全部归零。 |
 | G8 | 11 步本地端到端脚本 `artifacts/e2e/run.sh`，结尾必须打印 `E2E PASSED`；D0–D7 排期 | ship | 三份方案里唯一给了「怎么知道我们做完了」的判据。 |
 | G9 | 中继发送前用 `eth_getTransactionReceipt` 二次核对 + `orphaned` 标记；outbox 先落盘再推游标；一次一笔 `await tx.wait(1)`，不做 nonce 管理器 | ship | 3 vCPU 上最不会半夜炸的形态，重组处理最细。 |
@@ -33,7 +33,7 @@
 
 | 缺陷 | 修法 |
 |---|---|
-| 三家都没在 hook 里钉死税率，却把 owner 桶写成收入的固定 bps | `_validateBeforeLaunch` 用 `==` 钉死 `buyTaxRate == 200 && sellTaxRate == 200`，并在 `tokenCreationPolicies()` 镜像两条。**同时本设计的金库里没有任何 owner 桶**（§3.2），规则 001-h 的佣金上限对金库本体不再适用。 |
+| 三家都没在 hook 里钉死税率，却把 owner 桶写成收入的固定 bps | `_validateBeforeLaunch` 用 `==` 钉死 `buyTaxRate == 100 && sellTaxRate == 100`，并在 `tokenCreationPolicies()` 镜像两条。**同时本设计的金库里没有任何 owner 桶**（§3.2），规则 001-h 的佣金上限对金库本体不再适用。 |
 | 三家都没算 Flap 协议费 `feeRate = 1000 bps` | 所有 50/50 文案、`description()`、网站规则卡一律写在**扣除 10% 协议费之后**的基数上，并给出算术表（§3.3）。`commissionReceiver` 留空以保证 `commissionBps == 0`（rat 主网实测）。 |
 | `vaultUISchema()` 内容全部未定 | §3.2 与 `01-CONTRACT-SPEC.md` §2.4 给出逐字内容：**只出 view，零写方法，零 approvals**，与「层内没有给人用的写入界面」的叙事一致（02 §7.5）。 |
 | security 的 `vaultBps < 1000` | G1。 |
@@ -76,11 +76,11 @@
 | F8 shanghai vs cancun | G5。 |
 | F9 IPFS 固定服务我们没有 | 删掉 IPFS。可复现性靠 GitHub + BSC 上的锚点交易两处。 |
 | F10 `INFLATION_BOUNTY` 由谁付没写 | 删掉 `proveInflation` 与赏金（它依赖被删掉的全量快照）。它保护的性质改由 `postAnchor` 的两条 O(1) 硬检查 + 验证者否决承担（§4.3）。 |
-| F11 创世没给中继余额 → 第一笔 `credit` 就发不出去 | `OPERATOR_FLOAT = 1,000 BAC` 写进 alloc 并公开披露；创世前运营方必须在 BSC 的 `BacBridge` 锁等额 BAC，保住 1:1 backing；**`ChainAnchor` 的构造参数 `initialCirculating` 也必须等于它**，并进 §7.3 硬停第 14 项与创世回读对拍。 |
+| F11 创世没给中继余额 → 第一笔 `credit` 就发不出去 | `OPERATOR_FLOAT = 1,000 AGNT` 写进 alloc 并公开披露；创世前运营方必须在 BSC 的 `BacBridge` 锁等额 AGNT，保住 1:1 backing；**`ChainAnchor` 的构造参数 `initialCirculating` 也必须等于它**，并进 §7.3 硬停第 14 项与创世回读对拍。 |
 | F12 没有公开 `/rpc` | G10。 |
 | F13 对活着的 datadir 打 tar、备份和 geth 同盘 | §7.1 的备份纪律：每周停节点 5 分钟打冷备、保留 2 份、**异机存放**；SQLite 用 `VACUUM INTO`；磁盘预算表 + 80% 告警。 |
 | F14 `sslip.io` 证书是网站右半边的单点 | §7.2 写明：站点左半边（BSC）不经过我们的服务器；TLS 失败的备选是 Cloudflare Tunnel。 |
-| F15「gas 要花真钱所以刷不动」是错的 | §6.4 给出真实账：1 gwei × 20M gas × 28,800 块 = 576 BAC/天就能填满全链；真正的刹车是 EIP-1559 的涨价曲线，真正的代价是磁盘；配 chaindata 体积告警与 `--txpool.accountslots`。 |
+| F15「gas 要花真钱所以刷不动」是错的 | §6.4 给出真实账：1 gwei × 20M gas × 28,800 块 = 576 AGNT/天就能填满全链；真正的刹车是 EIP-1559 的涨价曲线，真正的代价是磁盘；配 chaindata 体积告警与 `--txpool.accountslots`。 |
 | F16 AI Oracle 的 gas 与计费口径全错 | 按 `09-chain-truth.md` 实测：`callbackGasLimit() = 8,000,000`，**没有 `getFee()`**，价格来自 `getModel(0).price = 0.005 BNB`，默认无限流。v1 不用它（§10）。 |
 | 三家共有：签名节点与中继私钥同机 | §8 信任表第一行逐字写明「同一信任域」，并禁止任何「需要两把钥匙同时泄漏」的措辞。 |
 
@@ -105,9 +105,9 @@
    │ newTokenV6WithVault(params)                         （用户手工发射，一次性）
    ├─ onBeforeLaunch(LaunchValidationDataV1) staticcall ─▶ BacVaultFactory._validateBeforeLaunch
    ├─ newVault(predictedToken, 0, creator, vaultData) ───▶ new BeaconProxy ──▶ BacTreasuryVault
-   └─ 部署 BAC(FlapTaxTokenV3, …7777) + TaxProcessor(marketAddress = Vault)
+   └─ 部署 AGNT(FlapTaxTokenV3) + TaxProcessor(marketAddress = Vault)
 
- BAC 交易 ─税─▶ TaxProcessor ─dispatch{gas:1e6} 原生 BNB 转账─▶ Vault.receive()
+ AGNT 交易 ─税─▶ TaxProcessor ─dispatch{gas:1e6} 原生 BNB 转账─▶ Vault.receive()
                                           （只做 _syncRevenue()，1 SLOAD + 1 SSTORE + 1 event，永不 revert）
  Vault.settle()（无许可）
      ├─ call{value, gas:100_000} ─▶ BacBridge.acceptRelease()    50%   桥池，backs 退出
@@ -116,7 +116,7 @@
      （稳态金库余额 ≈ 0；Guardian 的爆炸半径 = 两次 dispatch 之间的零头）
 
  Agent(BSC EOA) ─register / solveChallenge / heartbeat / publish ─▶ AgentRegistry
- Agent(BSC EOA) ─lock(agentId, amount) ─isActive?─▶ AgentRegistry ─▶ BacBridge（锁 BAC，记 credited[agentId]）
+ Agent(BSC EOA) ─lock(agentId, amount) ─isActive?─▶ AgentRegistry ─▶ BacBridge（锁 AGNT，记 credited[agentId]）
  Agent(BSC EOA) ─claimExit / collect / escapeCollect ─▶ BacBridge（出 BNB，不查任何状态）
  人类 ─stake / registerNode / commitAttestation / revealAttestation / claimReward ─▶ ValidatorStaking
                                                           └─ attest(epoch, exitRoot) ─▶ ChainAnchor
@@ -135,17 +135,17 @@
    indexer (node:22 + SQLite)  ─▶  caddy（自动 TLS）
         https://95-179-183-132.sslip.io   /rpc（方法白名单+限速+CORS）  /api/*  /health
 
-============= LAYER · Agentic Chain (chainId 56777, Clique period 3) =============
+============= LAYER · Agentic Chain (chainId 60606, Clique period 3) =============
  0x…0101 L2Bridge   创世持有 1,000,000,000e18 − OPERATOR_FLOAT；credit() 仅中继；exit() 谁都能调
  0x…0102 L2Gate     AgentRegistry 状态镜像，isAdmitted(addr)（只管发布，不管退出）
  0x…0103 AgentBook  announce / heartbeat，统一 Action 事件；费用烧进 FeeSink
  0x…0104 FeeSplitter 层内 gas 费分账与记账（决策 #17）
  0x…0105 （预留）    v2 的 QBFT 验证者集镜像合约，创世里没有代码
- 0x…0106 WBAC       原生 BAC 的包装 ERC-20（WETH9 形态，决策 #22）；中立工具，不是 DEX
+ 0x…0106 WAGNT      原生 AGNT 的包装 ERC-20（WETH9 形态，决策 #22）；中立工具，不是 DEX
  0x…dEaD FeeSink    无代码；官方签名者 EOA 同样声明为不流通地址
  0xcA11bde05977b3631167028862bE2a173976CA11 Multicall3
  0x4e59b44847b379578588920cA78FbF26c0B4956C CREATE2 确定性部署器
- 链上就这些：四个系统合约 + 三个中立工具（Multicall3 / CREATE2 部署器 / WBAC）
+ 链上就这些：四个系统合约 + 三个中立工具（Multicall3 / CREATE2 部署器 / WAGNT）
  Agent 自建的 DEX / 工具 / 市场 = 普通层内合约，我们不预置、不背书、不打安全标签
 
  Vercel 静态站（浏览器）：左半边直接读 BSC（Multicall3），右半边读 /api（层内数据）
@@ -161,7 +161,7 @@
 |---|---|---|---|---|---|
 | **官方 QBFT 出块节点（1 个，同机；决策 #12 已从 Clique 换成 Besu QBFT）** | 完全决定层内内容与顺序；停止出块；在被见证之前改写历史；**单方面把全链 gasLimit 降到任意值**（Clique 每块 ±1/1024，20M→2M 约 2 小时收敛 —— 这也是状态膨胀攻击唯一真实的刹车）；**在 geth 允许的 ±15 秒漂移内自由选择每个区块的时间戳**，从而在纪元边界上决定一笔退出属于哪个纪元；**定向审查：只要不把某个 agent 的 `exit()` 打进区块，那个 agent 在 v1 没有任何链上救济**（见 §7.2 #15）；**拿走每一个它出的块的全部 gas 费**（`zeroBaseFee` 下费用 100% 进 coinbase = 它自己的 EOA，实测），并**决定要不要把它转进 `FeeSplitter`**；它自己刷链是免费的（费用付给自己） | 重写整条层内状态；单点决定任何一个 agent 能不能退出 | 只能经锚点变现：24h 挑战窗口 + 验证者可否决 + 每纪元全局 2–5% + 单地址每纪元 10% + veto + 90 天逃生 | 签名者扩到 3 个（官方 1 + 质押最高且连续见证 30 天的验证者 2），Clique 2/3 | 签名者集合由 `ValidatorStaking` 按质押轮换 |
 | **官方节点的 gas 收入归集（阶段 1，决策 #17）** | 决定把多少、什么时候把官方节点 EOA 里的 gas 收入转进 `FeeSplitter(0x…0104)`；不转就没人能强制 | 验证者池长期为 0，那 10% 一直停在官方 EOA 里 | **只有可对账，没有强制**：每个纪元的锚点里带着该 proposer 的 `gasIncome` 与 `remitted`，见证人在承诺里签了这两个数（四元组含 `proposerIncomeRoot`），任何人也能从层内区块自己重算；浏览器的对账面板把**已收 / 已转入 / 差额**三个数并排显示，差额 ≠ 0 告警（`03` §3.7）。**没有任何合约会因为官方不归集而惩罚官方** | 出块权散开后官方的分母变小；归集改成每纪元一笔定时任务并公开失败记录 | 客户端层面把 coinbase 指向合约（需要改 Besu，v1 不做） |
-| **阶段 2 的验证者出块者（决策 #17）** | 拿走自己出的块的全部 gas 费，并决定要不要把基金会那 50% 转进 `FeeSplitter` | 少转或不转，基金会拿不到那一半 | **经济约束，不是强制：**锚点里的逐 proposer 数字进 `ValidatorStaking`，累计欠款超过容差（`cumRemitted × 10000 < cumOwed × 9950` 且 `cumOwed − cumRemitted > 0.05 BAC`）时，**扣发 BSC 侧奖励**（`rewardOf == 0`，转入 `withheldOf`）并**撤销出块资格**（`proposerRights == false`）。**v1 不罚没本金、不冻质押、不影响退出**；把它真正踢出 QBFT 验证者集仍是一次人工投票（`02` §6.1），要公告 | 归集改成进入出块集的前置押金 | validator-contract 模式下由合约直接决定出块集 |
+| **阶段 2 的验证者出块者（决策 #17）** | 拿走自己出的块的全部 gas 费，并决定要不要把基金会那 50% 转进 `FeeSplitter` | 少转或不转，基金会拿不到那一半 | **经济约束，不是强制：**锚点里的逐 proposer 数字进 `ValidatorStaking`，累计欠款超过容差（`cumRemitted × 10000 < cumOwed × 9950` 且 `cumOwed − cumRemitted > 0.05 AGNT`）时，**扣发 BSC 侧奖励**（`rewardOf == 0`，转入 `withheldOf`）并**撤销出块资格**（`proposerRights == false`）。**v1 不罚没本金、不冻质押、不影响退出**；把它真正踢出 QBFT 验证者集仍是一次人工投票（`02` §6.1），要公告 | 归集改成进入出块集的前置押金 | validator-contract 模式下由合约直接决定出块集 |
 | **官方中继私钥（同机）** | 层内凭空 `credit` 积分；提交把自己写进去的 `exitRoot`；**在构造 `exitRoot` 时漏掉某个 agent 的叶子（定向审查的第二条路径，`postAnchor` 的检查发现不了「少了一个叶子」）** | 稀释份额 / 慢速搬桥池 / 定向卡死某个 agent 的退出 | `cumulativeCredited + credited <= BacBridge.totalCreditsIssued()` 是 `postAnchor` 的 require，超发那一刻就再也发不出合法锚点；退出根受 24h 窗口 + 验证者否决 + 每纪元最多 **2–5% 桥池**（= `RELEASE_BPS`）约束。「再乘单地址 10% = 0.2–0.5%」的说法**已被模拟推翻**：agent 身份边际成本只有 `ENTRY_DEPOSIT 0.02 BNB`，拆 10 个身份就把单地址上限饱和掉（见「经济参数（模拟验证）」M2）。**零见证时另有「任意连续 30 个纪元累计 ≤ 15% 桥池」的合约级上限**（`NO_ATTEST_WINDOW_BPS`）；**伪造出来的 `owed` 在 cause 2/3 停机下拿不到优先级足额兑付**（`OWED_MATURITY = 14 天`）；**`collect` 改成单一累加器后，没有任何历史纪元的 pot 可以回头洗** | 存款方向改用 BSC 区块头 + 收据 Merkle 证明，去掉存款方向的信任 | 无许可提交 + 欺诈证明 |
 | **Flap Guardian `0x9e27098dcD8844bcc6287a557E0b4D09C86B8a4b`** | 随时升级金库实现；可单独调用金库每一个受限函数 | 改写金库逻辑，改变未来税收去向 | **金库稳态余额取决于有没有人调 `settle()`** —— 没有任何合约、定时器或奖励会自动调它，所以 `settle()` / `retryPush()` 被写进 `vaultUISchema().methods`，在 flap.sh 上渲染成两个任何人都能按的 Submit 按钮（`01` §2.4），官方索引器另有每纪元调用一次的**运营承诺**（承诺不是机制，照实写）。已推走的钱不受 Guardian 影响。金库里唯一的受限函数是 `transferOwnership` | 不可降低（规则 001/009 硬性要求），只能如实披露；审计稳定后可评估 `lockVaultUpgrades()`（同时失去修 bug 能力） | 同左 |
 | **`BacNodeFund.owner()`（节点基金受益人；注意它**不是**金库的 `owner()`，两者是互相独立、可各自转让的地址）** | 提取 `BacNodeFund` 的全部余额 = 税收的 50%（扣协议费后） | 拿走节点基金那一半 | 常量比例、无 setter；**没有任何路径能动桥池那一半**；`BacNodeFund` 不可升级、无 owner 全额救援之外的函数；每一笔提取都发事件 | 改成按纪元定额 + 链上可读支出表 | 由验证者投票批准支出 |
@@ -170,9 +170,9 @@
 | **层内中继轮换冷钥（创世写死）** | 换掉层内 `L2Bridge.relayer` | 指向一个恶意中继 | 只能换中继，不能铸币、不能动 BSC 上任何东西；离线签名、任何人可提交，**不经过被怀疑的中继** | 改成 BSC 时锁授权 | 由签名者集合共识 |
 | **索引服务 / 浏览器** | 展示假的层内历史 | 网站右半边显示不实 | BSC 侧的一切（注册、进桥、退出、见证、三个池子）网站**直接用 Multicall3 从 BSC 读**，不经过我们的服务器；未锚定内容强制标「未锚定 · 仅来自官方节点」 | 开源 + 由某个验证者跑第二个索引器并排显示 | 多索引器交叉比对 |
 | **Caddy `/rpc` 限速** | 限制某个 agent 发交易的速率 | 某个 agent 被拖慢 | 只做方法白名单 + 全局限速，**不做发送者过滤**；任何限速动作必须出现在 `/api/health` 上，不许静默；p2p 绕得过，照实说 | 限速规则上链可读 | 多签名者后成为共识规则 |
-| **BAC 代币本身** | Flap 的管理角色可改 `marketAddress` 等 | 税收改道 | 发射后 5 分钟硬停核验一次，之后索引器每小时对拍一次；文案只能写「项目方无法修改」，**不写「永久不可改」** | — | — |
+| **AGNT 代币本身** | Flap 的管理角色可改 `marketAddress` 等 | 税收改道 | 发射后 5 分钟硬停核验一次，之后索引器每小时对拍一次；文案只能写「项目方无法修改」，**不写「永久不可改」** | — | — |
 | **人类验证者（集体）** | 否决一个纪元的锚点 | 恶意多数可把退出拖慢，并在 30 个纪元里累计 3 次否决之后**武装**逃生（14 天可取消） | 否决要同时满足三条：`disputingWeight >= agreeingWeight`、`>= 总质押的 1/3`、异议者独立地址数 `>= 3` —— **单个地址永远无法独自制造 `DISPUTED`**；被否决的纪元里的退出叶子并入后续锚点重报，叶子不变（没有 epoch 字段）所以照样能证明；`settleEpoch` 可以跳过被否决的纪元，`collect` 不会因此冻结 | 质押权重上限 + 双签客观罚没 | 同左 |
-| **单个验证者（`MIN_STAKE = 200 万 BAC`，v1 不罚没）** | 报错根、拿不到奖励；参与制造 `DISPUTED` | **v1 没有罚没**：连续否决的代价只有 7 天冷却期的资金占用和几笔 gas，本金原样取回 | 上面那三条门槛（尤其是「3 个独立地址」）；所有停机触发统一走 14 天可取消的武装期，**没有任何一笔无许可交易能在同一个区块里终止这条链** | 客观双签证据可罚没 | 验证者投票 + 客观证据 |
+| **单个验证者（`MIN_STAKE = 200 万 AGNT`，v1 不罚没）** | 报错根、拿不到奖励；参与制造 `DISPUTED` | **v1 没有罚没**：连续否决的代价只有 7 天冷却期的资金占用和几笔 gas，本金原样取回 | 上面那三条门槛（尤其是「3 个独立地址」）；所有停机触发统一走 14 天可取消的武装期，**没有任何一笔无许可交易能在同一个区块里终止这条链** | 客观双签证据可罚没 | 验证者投票 + 客观证据 |
 | **`watchdog` 热钥（同机）** | `pause()` 冻结 `collect`；`armEscape()` 武装逃生 | 最多冻结 21 天的 `collect` | `pause()` **不冻结 `claimExit`、不冻结 `claimOwedAfterHalt`、不冻结 `escapeCollect`**；`pausedCumulative` 累计上限 21 天，**冻满即构成停机触发 5，逃生自动可武装**（fail-safe）；`armEscape()` 只能武装，14 天内 veto 钥可取消 | 移到 2/3 多签 | 交给验证者投票 |
 
 ---
@@ -182,8 +182,8 @@
 ### 3.1 一笔交易税的完整路径
 
 ```
-agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
-        │  买税 2% / 卖税 2%（发射时用 == 钉死，合约里没有改它的函数）
+agent / 人类在 flap.sh 或 PancakeSwap 上买卖 AGNT
+        │  买税 1% / 卖税 1%（发射时用 == 钉死，合约里没有改它的函数）
         ▼
    TaxProcessor（每个代币一个，Flap 部署）
         │  dispatch() 顺序：协议费 → 佣金 → market → dividend
@@ -224,7 +224,7 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 
 | 步骤 | 数值 | 说明 |
 |---|---|---|
-| 交易税 | `T` | 买 2% / 卖 2%，作用在交易额上 |
+| 交易税 | `T` | 买 1% / 卖 1%，作用在交易额上 |
 | Flap 协议费 | `0.10 × T` | `feeConfigV2().feeRate = 1000` bps，rat 主网 block 122,374,499 实测 |
 | 佣金 | `0` | `commissionReceiver` 留空 → `commissionBps = 0`（同一快照实测） |
 | 进金库（`mktBps = 10000`） | **`0.90 × T`** | 这是 50/50 的基数 |
@@ -260,7 +260,7 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 |---|---|---|
 | `quoteToken` | `address(0)`（BNB） | 决策；`vaultQuoteToken()` 返回 `address(0)`，不是 WBNB |
 | `tokenVersion` | 6（Tax Token V3） | 规则 |
-| `buyTaxRate` / `sellTaxRate` | 200 / 200（2% / 2%） | 钉死税率，`description()` 里的比例披露才能保证为真；2% 是 rat 的实际发射值，有先例 |
+| `buyTaxRate` / `sellTaxRate` | 100 / 100（1% / 1%） | 钉死税率，`description()` 里的比例披露才能保证为真；2026-09-28 用户定为 1%（原为 2%） |
 | `mktBps`（= `vaultBps`） | 10000 | G1 |
 | `deflationBps` / `lpBps` / `dividendBps` | 0 / 0 / 0 | `dividendBps` 必须为 0（金库持币会收到 Flap 分红，与税收无法按 delta 区分）；四桶之和必须为 10000 |
 | `dividendToken` | `address(0)`，且 `!= MAGIC_DIVIDEND_COMPUTED` | 我们不实现 `resolveDividendToken` |
@@ -303,7 +303,7 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 | `MAX_EXIT_SHARE_BPS` | 1000 | 单地址单纪元最多拿该纪元 pot 的 10%；**被截掉的留在 `owed` 里下一纪元继续领，不没收**。模拟选中：持 10% 积分者 17 天拿到九成。**定性为减速带，不是安全边界**（见「经济参数（模拟验证）」M2） |
 | `HALT_TIMEOUT` | 90 days | 无新 FINAL 锚点满 90 天 → 可武装逃生。评审的 14 天在新链上是自杀（A1/F1） |
 | `VETO_LIMIT_PER_WINDOW` / `STREAK_WINDOW` | 7 / 30 纪元 | **滑动窗口**计数（`uint32` 位图，O(1)）：任意连续 30 个纪元内被 veto 满 7 次即可武装逃生，第 8 次 `veto` 直接 revert。旧的「连续计数 + FINAL 清零」可以用「veto 七个、放过一个」无限循环，把释放速度压到 1/8（20 天释放一半 → 230 天）而永不触发任何停机条件（attack-gate #8） |
-| `DISPUTE_LIMIT_PER_WINDOW` | 3（同一个 30 纪元窗口） | 同上。另外 `DISPUTED` 的判定加了两条绝对门槛（异议权重 ≥ 总质押 1/3、异议者独立地址数 ≥ 3），否则 200 万 BAC 就能买到一个全链终止开关（attack-gate #3） |
+| `DISPUTE_LIMIT_PER_WINDOW` | 3（同一个 30 纪元窗口） | 同上。另外 `DISPUTED` 的判定加了两条绝对门槛（异议权重 ≥ 总质押 1/3、异议者独立地址数 ≥ 3），否则 200 万 AGNT 就能买到一个全链终止开关（attack-gate #3） |
 | `ESCAPE_ARM_DELAY` | 14 days | **五条停机触发全部走这个武装期**（不只是手动那条）。期间 veto 钥可取消，但**只有在触发条件本身已经消失时才允许取消**（手动武装除外）—— 既不让一笔无许可交易在同一个区块里终结全链，也不让一把冷钥无限期压住逃生口 |
 | `PAUSE_LEN` | 7 days | 单次冻结 `collect` 的上限，可续（受 `MAX_PAUSE_TOTAL` 约束）；**不冻结 `claimExit`**（它一 wei 都不出金，冻它等于把在途退出者的本金烧光，实际后果是没人敢按这个按钮）；**不能冻结 `claimOwedAfterHalt` / `escapeCollect`** |
 
@@ -311,7 +311,7 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 
 | 常量 | 值 | 理由 |
 |---|---|---|
-| `MIN_VALIDATOR_STAKE` | 2,000,000e18 BAC | 总量 1e9 的 0.2%；门槛要能挡住随手注册，又不至于只有巨鲸能当 |
+| `MIN_VALIDATOR_STAKE` | 2,000,000e18 AGNT | 总量 1e9 的 0.2%；门槛要能挡住随手注册，又不至于只有巨鲸能当 |
 | `UNSTAKE_COOLDOWN` | 7 days | 防止「见证完就跑」 |
 | `MAX_NODES` | 64 | `finalize` 要数权重，O(n) 必须有界 |
 | ~~`WEIGHT_CAP`~~ | **删除** | 模拟推翻：线性权重确实拆号中性，**加上上限之后拆号严格更赚**（押 6000 万时 k=1 拿 27.3%、k=3 拿 70.9%）。权重 = 质押量，纯线性（见「经济参数（模拟验证）」M3） |
@@ -320,19 +320,19 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 | `REWARD_CLAIM_WINDOW` | 30 days | 过期退回奖励余额 |
 | `MAX_STRIKES` | 3 | 连续 3 次不报或报错 → 节点停用；**本金照样按冷却取回**，v1 不罚没 |
 
-**层内（chainId 56777）**
+**层内（chainId 60606）**
 
 | 常量 | 值 | 理由 |
 |---|---|---|
-| `TOTAL_SUPPLY` | 1,000,000,000e18 | 等于 BAC 在 BSC 上的固定总量，创世写死的积分上限 |
-| `OPERATOR_FLOAT` | 1,000e18 | 中继在层内的 gas；创世前运营方必须在 BSC 锁等额 BAC，保住 1:1 backing（公开披露） |
+| `TOTAL_SUPPLY` | 1,000,000,000e18 | 等于 AGNT 在 BSC 上的固定总量，创世写死的积分上限 |
+| `OPERATOR_FLOAT` | 1,000e18 | 中继在层内的 gas；创世前运营方必须在 BSC 锁等额 AGNT，保住 1:1 backing（公开披露） |
 | `qbft.blockperiodseconds` | 3 s | 28,800 块/天；浏览器的实时感够，磁盘可控（决策 #12：已从 Clique 换成 Besu QBFT） |
 | `qbft.epochlength` | 30000 | QBFT 的**投票**纪元，和产品里 `epoch = timestamp / 86400` 的结算纪元毫无关系（`02` §1.1） |
 | `gasLimit` | 20,000,000 (`0x1312D00`) | 故意比 BSC 小；磁盘是真正的约束 |
 | `zeroBaseFee` | **`true`**（`baseFeePerGas = 0`） | 决策 #16：Besu 里 basefee 只能销毁、无法分账，所以关掉它，让全部 gas 费以 tips 形式进**出块者地址**（实测），再按 §3.6 分账 |
-| `--min-gas-price` | **1 gwei（固定，可调）** | 没了 EIP-1559 的自动涨价刹车之后，防刷剥剩下这一条 + 20M 区块上限 + 磁盘告警（决策 #16）。一笔转账 21000 × 1e9 = 0.000021 BAC，桥进 1 BAC 够约 4.7 万笔 |
+| `--min-gas-price` | **1 gwei（固定，可调）** | 没了 EIP-1559 的自动涨价刹车之后，防刷剥剩下这一条 + 20M 区块上限 + 磁盘告警（决策 #16）。一笔转账 21000 × 1e9 = 0.000021 AGNT，桥进 1 AGNT 够约 4.7 万笔 |
 | `OFFICIAL_BLOCK_VALIDATOR_BPS` / `VALIDATOR_BLOCK_VALIDATOR_BPS` | 1000 / 5000 | 决策 #17：官方节点出的块 10% 进验证者池，验证者出的块 50% 归该验证者；基金会那一份一律用余数法。全部常量见 §3.6.1 |
-| `PUBLISH_FEE` | 0.001e18 BAC | `AgentBook.announce` 收费并烧进 FeeSink |
+| `PUBLISH_FEE` | 0.001e18 AGNT | `AgentBook.announce` 收费并烧进 FeeSink |
 | `MAX_ANNOUNCE_PER_EPOCH` | 20（每 agent） | 防刷屏 |
 | `MAX_SUMMARY_BYTES` | 120 | `Action.summary` 硬限 |
 
@@ -358,7 +358,7 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 | `POOL_ATTEND_WINDOW` | 30（纪元） | 验证者池的出勤统计窗口（`attend30 ∈ [0, 30]`） |
 | `POOL_CLAIM_WINDOW` | 30 days | 池子份额的领取期限；过期与取整余数一律**结转到下一个被赋权重的纪元的池子**，不进基金会 |
 | `REMIT_TOLERANCE_BPS` | 50（0.5%） | 归集短缺判定的相对容差 |
-| `REMIT_DUST` | `0.05e18`（0.05 BAC） | 归集短缺判定的绝对下限，两条**同时**满足才算短缺 |
+| `REMIT_DUST` | `0.05e18`（0.05 AGNT） | 归集短缺判定的绝对下限，两条**同时**满足才算短缺 |
 | `REMIT_GRACE_EPOCHS` | 2 | 短缺判定的滞后纪元数（给归集交易留时间） |
 | `PROPOSER_QUALIFY_EPOCHS` | 30 | 决策 #15：连续 30 个纪元在线且见证无误才拿到出块资格 |
 
@@ -385,7 +385,7 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 验证者池的领取：  FeeSplitter.claimPool(epoch, to)   —— 按 质押 × 出勤 的权重比例，权重由中继从 BSC 镜像过来
 基金会的提取：    FeeSplitter.withdrawFoundation(to, amount) —— 仅 FOUNDATION_PAYOUT（创世写死的层内地址）
 
-两边拿到的都是**层内 BAC（积分）**。要换成 BNB 只有一条路：和 agent 完全一样，
+两边拿到的都是**层内 AGNT（积分）**。要换成 BNB 只有一条路：和 agent 完全一样，
 `L2Bridge.exit(bscRecipient)` → 锚点 → `BacBridge.claimExit` → 按当时的桥池兑付率锁定 → `collect`。
 **没有为验证者或基金会开的第二条出金通道**，也**不承诺任何兑付金额**。
 ```
@@ -397,54 +397,54 @@ agent / 人类在 flap.sh 或 PancakeSwap 上买卖 BAC
 
 | 情景 | 日交易笔数 | 平均 gas/笔 | 日总 gas | **日 gas 费总额** |
 |---|---|---|---|---|
-| A · 清淡日 | 120,000 | 65,000 | `7.8e9` | **7.8 BAC/天** |
-| B · 繁忙日 | 600,000 | 90,000 | `5.4e10` | **54 BAC/天** |
+| A · 清淡日 | 120,000 | 65,000 | `7.8e9` | **7.8 AGNT/天** |
+| B · 繁忙日 | 600,000 | 90,000 | `5.4e10` | **54 AGNT/天** |
 
-**阶段 1（只有官方节点出块），按情景 B 的 54 BAC/天：**
+**阶段 1（只有官方节点出块），按情景 B 的 54 AGNT/天：**
 
 ```
-验证者池   = 54 × 1000 / 10000 = 5.4 BAC/天
-官方基金会 = 54 − 5.4          = 48.6 BAC/天
+验证者池   = 54 × 1000 / 10000 = 5.4 AGNT/天
+官方基金会 = 54 − 5.4          = 48.6 AGNT/天
 ```
 
-设当纪元有 4 个见证达标的验证者，质押分别是 200 万 / 200 万 / 400 万 / 600 万 BAC，出勤都是 30/30，
+设当纪元有 4 个见证达标的验证者，质押分别是 200 万 / 200 万 / 400 万 / 600 万 AGNT，出勤都是 30/30，
 则权重比 = `2 : 2 : 4 : 6`（`stake × attend30` 的公因子可以约掉），权重和 14 份：
 
 | 验证者 | 质押 | attend30 | 权重份额 | 当日到手 |
 |---|---|---|---|---|
-| V1 | 200 万 | 30 | 2/14 | `771428571428571428` wei = 0.7714 BAC |
-| V2 | 200 万 | 30 | 2/14 | 0.7714 BAC |
-| V3 | 400 万 | 30 | 4/14 | `1542857142857142857` wei = 1.5429 BAC |
-| V4 | 600 万 | 30 | 6/14 | `2314285714285714285` wei = 2.3143 BAC |
+| V1 | 200 万 | 30 | 2/14 | `771428571428571428` wei = 0.7714 AGNT |
+| V2 | 200 万 | 30 | 2/14 | 0.7714 AGNT |
+| V3 | 400 万 | 30 | 4/14 | `1542857142857142857` wei = 1.5429 AGNT |
+| V4 | 600 万 | 30 | 6/14 | `2314285714285714285` wei = 2.3143 AGNT |
 | 取整余数 | | | | **2 wei 留在池子里，结转到下一个纪元** |
 
-**阶段 2（官方 1 个 + 挣到出块资格的验证者 3 个，QBFT 轮流出块，各出约 25% 的块），同样是 54 BAC/天：**
+**阶段 2（官方 1 个 + 挣到出块资格的验证者 3 个，QBFT 轮流出块，各出约 25% 的块），同样是 54 AGNT/天：**
 
 ```
-官方出的块        13.5 BAC → 池 1.35，基金会 12.15
-V3 出的块         13.5 BAC → V3 自留 6.75，基金会 6.75
-V4 出的块         13.5 BAC → V4 自留 6.75，基金会 6.75
-V2 出的块         13.5 BAC → V2 自留 6.75，基金会 6.75
+官方出的块        13.5 AGNT → 池 1.35，基金会 12.15
+V3 出的块         13.5 AGNT → V3 自留 6.75，基金会 6.75
+V4 出的块         13.5 AGNT → V4 自留 6.75，基金会 6.75
+V2 出的块         13.5 AGNT → V2 自留 6.75，基金会 6.75
 --------------------------------------------------------
-基金会合计        12.15 + 6.75×3 = 32.4 BAC/天（60%）
-验证者侧合计      6.75×3 + 1.35   = 21.6 BAC/天（40%）
+基金会合计        12.15 + 6.75×3 = 32.4 AGNT/天（60%）
+验证者侧合计      6.75×3 + 1.35   = 21.6 AGNT/天（40%）
 ```
 
 四家的权重仍是 `2 : 2 : 4 : 6`（V1 只见证不出块）：
 
-| 验证者 | 出块自留 | 池子份额（1.35 BAC 按 2:2:4:6 分） | 当日合计 | 30 天 |
+| 验证者 | 出块自留 | 池子份额（1.35 AGNT 按 2:2:4:6 分） | 当日合计 | 30 天 |
 |---|---|---|---|---|
-| V1（只见证） | 0 | `1.35 × 2/14` = 0.192857 BAC | **0.1929 BAC/天** | 5.79 BAC |
-| V2（出块） | 6.75 | 0.192857 BAC | **6.9429 BAC/天** | 208.3 BAC |
-| V3（出块） | 6.75 | `1.35 × 4/14` = 0.385714 BAC | **7.1357 BAC/天** | 214.1 BAC |
-| V4（出块） | 6.75 | `1.35 × 6/14` = 0.578571 BAC | **7.3286 BAC/天** | 219.9 BAC |
+| V1（只见证） | 0 | `1.35 × 2/14` = 0.192857 AGNT | **0.1929 AGNT/天** | 5.79 AGNT |
+| V2（出块） | 6.75 | 0.192857 AGNT | **6.9429 AGNT/天** | 208.3 AGNT |
+| V3（出块） | 6.75 | `1.35 × 4/14` = 0.385714 AGNT | **7.1357 AGNT/天** | 214.1 AGNT |
+| V4（出块） | 6.75 | `1.35 × 6/14` = 0.578571 AGNT | **7.3286 AGNT/天** | 219.9 AGNT |
 
-**出块的一天 7.33 BAC，只见证的一天 0.19 BAC，相差约 38 倍** —— 这就是决策 #17 那句「出块才是大头」的具体数字，也是阶段 2 的全部经济意义。
+**出块的一天 7.33 AGNT，只见证的一天 0.19 AGNT，相差约 38 倍** —— 这就是决策 #17 那句「出块才是大头」的具体数字，也是阶段 2 的全部经济意义。
 
 **同一张表必须跟着的三句实话（进网站与 FAQ，不许删）：**
 
-1. **情景 A 下整个验证者池一天只有 0.78 BAC**，四家分完每家 0.195 BAC/天。它够不够付见证自己的 BSC gas，**取决于桥池的兑付率，而我们不承诺任何兑付率**。成交量小的时候见证很可能是亏的。
-2. 上面所有数字的单位都是**层内 BAC（积分）**，不是 BNB。换成 BNB 要走和 agent 完全相同的退出路径，受同样的每纪元释放上限约束（`§3.5`、`§11.2`）。
+1. **情景 A 下整个验证者池一天只有 0.78 AGNT**，四家分完每家 0.195 AGNT/天。它够不够付见证自己的 BSC gas，**取决于桥池的兑付率，而我们不承诺任何兑付率**。成交量小的时候见证很可能是亏的。
+2. 上面所有数字的单位都是**层内 AGNT（积分）**，不是 BNB。换成 BNB 要走和 agent 完全相同的退出路径，受同样的每纪元释放上限约束（`§3.5`、`§11.2`）。
 3. **这是分账规则，不是收益预测。** 日成交量是假设，不是承诺；gas 费为 0 的那天，所有人的这一份都是 0。
 
 #### 3.6.4 两个阶段的归集都是「受信但可对账」，短缺在链上长什么样
@@ -519,7 +519,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 - 写个脚本注册并全自动运行 —— **完全做得到，这就是设计上限**，本系统里「agent」的定义就是「一个自动化进程」。
 - 脚本进来后，人坐在后面逐条批准它的每个决定 —— 做得到且链上不可检测（层内动作本身没有限时要求，只有准入和心跳有）。
-- 一台机器开 20 个身份 —— 做得到，成本线性（每个要 `ENTRY_DEPOSIT` + BSC gas + 要锁 BAC 才有 gas）。
+- 一台机器开 20 个身份 —— 做得到，成本线性（每个要 `ENTRY_DEPOSIT` + BSC gas + 要锁 AGNT 才有 gas）。
 - 给自己的 agent 转积分让「子 agent」上链 —— 做得到、浏览器可见，不禁止但要在 FAQ 写明；未注册地址在浏览器里标成「未注册地址（由某 agent 转入）」。
 - 自己跑一个节点，绕开 Caddy 直接用 p2p 把交易 gossip 给签名节点 —— 做得到。缓解手段（静态 peer 白名单）与「人类验证者自由同步」互斥，所以 v1 **不做**，照实说。
 - 偷或买 agent 私钥 —— `rotateController` 要求新钥签名加重过挑战，只能提高成本。
@@ -551,7 +551,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 **五条一律只能「武装」，没有任何一条能当场停机**（`01` §4.2 的 `checkHalt()`）。
 早先 `01` 让前三条 `checkHalt()` 立即生效、不可取消，而 `00` 说四条都走 14 天武装期 —— 两份规格对不上，
-且 `01` 那一份是可以被攻击的：v1 不罚没，200 万 BAC 的质押连续三次否决就能买到一个**不可逆的全链终止开关**，
+且 `01` 那一份是可以被攻击的：v1 不罚没，200 万 AGNT 的质押连续三次否决就能买到一个**不可逆的全链终止开关**，
 7 天冷却后本金原样取回，而对一个在层内亏了钱的大户来说，停机（按 BSC 侧净入桥额兑付）本身就是净收益。
 
 **取消权是有条件的，不是自由裁量：** `cancelEscapeArm()` 只有 `ChainAnchor.vetoKey()` 能调，
@@ -615,7 +615,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 **不提前放出块权的原因不变**：QBFT 超过 1/3 的验证者掉线整链停块，而扩容的下一步是 **4 个**而不是 3 个（`02` §6.4 的硬数学）。
 
-1. **质押。** 在 BSC 上 `stake(amount)` 转入 BAC，`>= MIN_VALIDATOR_STAKE = 2,000,000 BAC`。质押的 BAC 真实托管，**合约里没有任何 admin 能移动它的路径，也没有代币救援函数**。退出：`requestUnstake(amount)` → 7 天冷却 → `withdrawUnstaked(to)`。
+1. **质押。** 在 BSC 上 `stake(amount)` 转入 AGNT，`>= MIN_VALIDATOR_STAKE = 2,000,000 AGNT`。质押的 AGNT 真实托管，**合约里没有任何 admin 能移动它的路径，也没有代币救援函数**。退出：`requestUnstake(amount)` → 7 天冷却 → `withdrawUnstaked(to)`。
 2. **注册节点。** `registerNode(nodeIdHash, enodeURI, payout)`，无许可先到先得，上限 64 个。每个 nodeId 必须绑定一份独立达标的质押（防止一个地址占满 64 个槽）。
 3. **跑节点。** `docker compose up`，geth 全节点从官方 enode 同步（公网 `30303/tcp+udp`），`--syncmode full`，不出块。完整命令见 `02-CHAIN-SPEC.md` §6。
 4. **见证（承诺-揭示，这是关键）。**
@@ -628,19 +628,19 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
    - `disputingWeight > 0 && disputingWeight >= agreeingWeight` → 该纪元 `DISPUTED`，**不结算、不释放**，该纪元的退出滚到下一个纪元重提，`disputeStreak += 1`；连续 3 次可武装逃生。
    - 否则 `FINAL`，释放档位按独立见证人数定档：0 个 → 200 bps，1–2 个 → 350 bps，≥3 个 → 500 bps。**见证人越多，所有 agent 的退出也越快**，两边利益对齐。
 6. **领奖。** `settleEpochRewards(epoch)`（无许可，**必须按序**，非 FINAL 的纪元 pot = 0 只推进游标）把奖励余额的 `REWARD_RELEASE_BPS = 500`（5%）定为该纪元奖池，**按 validator 地址的质押量**（纯线性，已删除 `WEIGHT_CAP`，同一地址的多个 nodeId 只算一次）分给报对根的地址，单地址不超过 25%；`claimReward(epoch, validator)` 各自领，30 天不领退回 `rewardBalance`。
-   **决策 #17 另加一条独立的收入**：层内 `FeeSplitter(0x…0104).claimPool(epoch, to)` 发的是该纪元的 **gas 费验证者池**（官方出块的 10%），按 `质押 × attend30` 的权重比例分，单位是**层内 BAC**；它和 BSC 侧的 BNB 奖励是两笔钱、两个合约、两种单位，网站上必须分开显示（`03` §3.7）。拿到出块资格的验证者还多一笔：自己出的块的 50% 直接留在自己的层内 EOA 里，根本不经过 `FeeSplitter`。分不掉的余数留在 `rewardBalance`（不滚进某个纪元的 pot），这样不变量 S2 才成立。
+   **决策 #17 另加一条独立的收入**：层内 `FeeSplitter(0x…0104).claimPool(epoch, to)` 发的是该纪元的 **gas 费验证者池**（官方出块的 10%），按 `质押 × attend30` 的权重比例分，单位是**层内 AGNT**；它和 BSC 侧的 BNB 奖励是两笔钱、两个合约、两种单位，网站上必须分开显示（`03` §3.7）。拿到出块资格的验证者还多一笔：自己出的块的 50% 直接留在自己的层内 EOA 里，根本不经过 `FeeSplitter`。分不掉的余数留在 `rewardBalance`（不滚进某个纪元的 pot），这样不变量 S2 才成立。
 
 **抓得到什么、抓不到什么（必须诚实）：** 承诺必须早于锚点，所以这能抓住「中继私钥被盗后发一个与真实链不符的根」，也就是最可能发生的那类攻击。但见证人完全可以从官方公开 RPC 抄数据而不真跑节点，合约无法分辨；对「签名节点自己重写整条链」，见证人抄到的也是假数据，抓不住 —— 那只能靠 §9 的 v2/v3。
 
 **反女巫（按模拟修正后的诚实版本）：** 纯线性质押权重（拆号在权重上真正中性）+ 质押门槛 + 每纪元两笔 BSC 交易的 gas + 错根零奖励。
 **必须照实说的一条：`MAX_VALIDATOR_SHARE_BPS = 2500` 拆 4 个号就能绕过**，边际成本只有 0.00055 BNB/月/节点（机器可以共用一台，合约分辨不了）。真正挡住拆号的只有 `MIN_VALIDATOR_STAKE` 本身。见「经济参数（模拟验证）」M3。
-**为了让这句话成立，合约必须补两条**（`01` §7）：① `requestUnstake` 要复查 `staked − amount >= MIN_STAKE × nodesOf(who)`，否则「押 800 万 → 注册 4 个节点 → 解押 600 万」在规格里没有任何函数会 revert，占满 64 槽的成本从 1.28 亿 BAC 掉到 3200 万；② 分奖和见证权重都**按地址**算、每地址只算一次，否则「按节点发奖 + 按地址见证」会让 2M 质押拿到 4 份奖励，拆号从中性变成稳赚 4 倍。
+**为了让这句话成立，合约必须补两条**（`01` §7）：① `requestUnstake` 要复查 `staked − amount >= MIN_STAKE × nodesOf(who)`，否则「押 800 万 → 注册 4 个节点 → 解押 600 万」在规格里没有任何函数会 revert，占满 64 槽的成本从 1.28 亿 AGNT 掉到 3200 万；② 分奖和见证权重都**按地址**算、每地址只算一次，否则「按节点发奖 + 按地址见证」会让 2M 质押拿到 4 份奖励，拆号从中性变成稳赚 4 倍。
 **罚没：v1 没有。** 没有层内欺诈证明就没法公正罚没，硬做只会做出一个可被滥用的没收开关。惩罚只有两条：错根不给钱；`removeValidator` 经 48 小时时锁取消领奖资格（**本金照样按冷却取回**）。这条要写进网站。
 
 **收益必须这样说（决策 #17 之后是两笔，必须分开讲）：**
 
 1. **BSC 侧的 BNB 奖励**：来自 `ValidatorStaking` 合约里的 BNB 余额，余额来自运营方从节点基金注入（v1 不是合约强制分账，见 §6.3）。**税收是 0 的时候它就是 0。**
-2. **层内的 gas 费分账**（§3.6）：只见证的人分官方出块那 10% 的池子；拿到出块资格的人拿自己出的块的 50%。**层内没交易的那天，这一笔也是 0**；它的单位是层内 BAC，换成 BNB 要走和 agent 完全相同的退出路径，**不承诺任何兑付金额**。
+2. **层内的 gas 费分账**（§3.6）：只见证的人分官方出块那 10% 的池子；拿到出块资格的人拿自己出的块的 50%。**层内没交易的那天，这一笔也是 0**；它的单位是层内 AGNT，换成 BNB 要走和 agent 完全相同的退出路径，**不承诺任何兑付金额**。
 
 **两笔都要自己出 gas（见证每纪元两笔 BSC 交易）。文案里不许出现任何收益承诺，只写机制和常数。**
 
@@ -658,20 +658,20 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 8. 不做 X General Verifier、不做 Candy Box。
 9. 不做 ERC-8004 的 Reputation / Validation Registry 上 BSC（只保留 Identity 的 JSON 形状）。
 10. **（决策 #22 覆盖了这一条的前半句）** 不由官方部署任何 DEX / 交易工具 / 市场 / 稳定币。
-    **WBAC 是唯一的例外，而且它不是 DEX**：它是原生币的包装 ERC-20（WETH9 形态，`0x…0106`，`01` §8.4），
+    **WAGNT 是唯一的例外，而且它不是 DEX**：它是原生币的包装 ERC-20（WETH9 形态，`0x…0106`，`01` §8.4），
     和 Multicall3、CREATE2 部署器一样属于**中立基础设施**。
-    - **为什么要预置**：Uniswap-V2 式的池子要求两边都是 ERC-20。没有 WBAC，agent 手上的 gas 币
-      （层内原生 BAC）**没有任何办法**进入一个池子，第一个池子就建不起来。
-    - **不预置的后果不是「干净」，是「碎」**：早晚会有三五个互不兼容的 WBAC 各自成池，
+    - **为什么要预置**：Uniswap-V2 式的池子要求两边都是 ERC-20。没有 WAGNT，agent 手上的 gas 币
+      （层内原生 AGNT）**没有任何办法**进入一个池子，第一个池子就建不起来。
+    - **不预置的后果不是「干净」，是「碎」**：早晚会有三五个互不兼容的 WAGNT 各自成池，
       流动性被切成几块，而且谁也说不清哪个是「对的」。预置一个、地址公开、永不可改，是唯一的解。
     - **它不是 DEX**：没有池子、没有路由、没有手续费、没有 owner、没有 admin、没有可升级路径、
       没有任何可调参数，链上也没有任何合约调用它。**DEX 仍然由 agent 自己写。**
     - **对外口径因此改口**（旧稿写的是「链出生就是空的」，现在不许再这么写）：
-      **「链上只有三个系统合约 + 一个分账合约 + 三个中立工具（Multicall3 / CREATE2 部署器 / WBAC），
+      **「链上只有三个系统合约 + 一个分账合约 + 三个中立工具（Multicall3 / CREATE2 部署器 / WAGNT），
       其余一切由 agent 自己建。」** 这仍然是产品，不是偷懒——界线是：
       **中立工具没有 owner、没有参数、没有升级路径、不收任何费、我们自己也改不了**，四条全满足才进创世。
 11. 不做代币治理、不发第二个代币、不做 NFT、不做 DAO、不做投票。
-12. 不做跨链（只有 BSC ↔ 层）、不做 BAC 从桥里取回的反向路径（进桥的 BAC 不再出来，出场拿的是 BNB）。
+12. 不做跨链（只有 BSC ↔ 层）、不做 AGNT 从桥里取回的反向路径（进桥的 AGNT 不再出来，出场拿的是 BNB）。
 13. 不做 agent 之间的支付协议（x402 / MPP）、不做任务市场。
 14. 不做 `emergencyWithdrawNative/Token`（规则 009 允许不写）。
 15. 不做「暂停整条链的开关」，只有能停不能动钱的 veto / pause 与不可逆的逃生。
@@ -682,7 +682,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 ### 6.3 一条必须诚实说明的 v1 短板
 
-决策 #5 说「人类质押 BAC 成为验证者、跑节点、领节点基金奖励」，决策 #10 说「节点基金那一半 owner 全拿，用于服务器与节点搭建」。这两条在 v1 的落地方式是：
+决策 #5 说「人类质押 AGNT 成为验证者、跑节点、领节点基金奖励」，决策 #10 说「节点基金那一半 owner 全拿，用于服务器与节点搭建」。这两条在 v1 的落地方式是：
 
 > `BacNodeFund` 的余额由项目方地址提取；`ValidatorStaking.fundRewards()` 是一个**无许可的 payable 函数**，任何人（实践中是运营方）都可以往里注入 BNB；验证者奖励从这个余额里按 §5 第 6 步发放。
 >
@@ -692,9 +692,9 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 ### 6.4 刷链的真实账（必须写进文档并加监控）
 
-`baseFee` 1 gwei × `gasLimit` 20M × 28,800 块/天 = **576 BAC/天就能填满全链每一个块**（总量的 0.0000576%）。所以「gas 要花真金白银的 BAC，所以刷不动」这个论证在发射价位上**不成立**。
+`baseFee` 1 gwei × `gasLimit` 20M × 28,800 块/天 = **576 AGNT/天就能填满全链每一个块**（总量的 0.0000576%）。所以「gas 要花真金白银的 AGNT，所以刷不动」这个论证在发射价位上**不成立**。
 
-- 真正的代价是**磁盘**：如果这 576 BAC/天全打在冷 SSTORE 上（20k gas 一个槽），每天新增约 2,880 万个存储槽 ≈ 2.9 GB/天，70 GB 空闲三周见底。
+- 真正的代价是**磁盘**：如果这 576 AGNT/天全打在冷 SSTORE 上（20k gas 一个槽），每天新增约 2,880 万个存储槽 ≈ 2.9 GB/天，70 GB 空闲三周见底。
 - **唯一真实、可执行、可逆的刹车是：Clique 签名者逐块调 `gasLimit`。** EIP-1559 规则下每块最多 ±1/1024，
   把 `--miner.gaslimit` 从 20,000,000 调到 2,000,000 约需 3,050 个块 ≈ **2.5 小时**，不改 geth、不硬分叉、不需要任何人配合。
   这条必须写进 `02` §5.4 的 runbook（触发线：chaindata 日增 > 500 MB 且持续 6 小时），
@@ -728,7 +728,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 因此 `[待定] 8`（异机备份的存放位置）从「待定」升级为 **D6 的硬前置**：
 在没有异机备份之前上线，等于把整条链押在一块 VPS 磁盘上。
 
-**监控（写进 runbook，告警走 webhook，不写文件）：** 出块延迟 > 30 s · 锚点超 `epochEnd + 2h` 未发 · 连续 3 纪元 `attestations == 0` · `totalCreditsIssued`（BSC）与层内 `TOTAL_SUPPLY − L2Bridge − FeeSink − Signer` 的对账差额非零 · 中继 BSC 余额 < 0.05 BNB 或层内余额 < 100 BAC · signer keystore 哈希变更 · chaindata / index.db 体积 · `AnchorVetoed` / `AnchorDisputed` / `EscapeArmed` / `Halted` 即时推送 · 每小时对拍一次 `TaxProcessor.marketAddress() == vault` ·
+**监控（写进 runbook，告警走 webhook，不写文件）：** 出块延迟 > 30 s · 锚点超 `epochEnd + 2h` 未发 · 连续 3 纪元 `attestations == 0` · `totalCreditsIssued`（BSC）与层内 `TOTAL_SUPPLY − L2Bridge − FeeSink − Signer` 的对账差额非零 · 中继 BSC 余额 < 0.05 BNB 或层内余额 < 100 AGNT · signer keystore 哈希变更 · chaindata / index.db 体积 · `AnchorVetoed` / `AnchorDisputed` / `EscapeArmed` / `Halted` 即时推送 · 每小时对拍一次 `TaxProcessor.marketAddress() == vault` ·
 **`BacBridge.skippedEpochs()` 连续增长 3 次** · **`isPaused()` 的 `cumulative` 超过 14 天（`MAX_PAUSE_TOTAL` 的 2/3）** ·
 **金库 `accountedQuote()` 连续 2 个纪元非零且单调上升（说明没人调 `settle()`，运营承诺没兑现）** ·
 **`BacNodeFund.owner()` 变更**（它是链上描述里那个「提取人」，一变，`description()` 的渲染跟着变） ·
@@ -739,12 +739,12 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 | # | 场景 | 后果 | 预案 |
 |---|---|---|---|
-| 1 | **服务器永久死亡** | 层停止出块；进桥出桥都停；`/api/*` 全挂；网站右半边显示 `读取失败 · 重试中`，左半边（BSC）照常 | 90 天无新锚点 → `armEscape` → 14 天后 `isHalted()` → 任何 agent 用 `escapeCollect(agentId, to)` 按 BSC 侧净入桥额领池子里现在和以后的每一笔 BNB。**不需要我们、不需要中继、不需要证明数据。** 锁在桥里的 BAC 没有任何路径转给任何人，`burnLocked()` 是唯一出口且目标写死为死地址 |
+| 1 | **服务器永久死亡** | 层停止出块；进桥出桥都停；`/api/*` 全挂；网站右半边显示 `读取失败 · 重试中`，左半边（BSC）照常 | 90 天无新锚点 → `armEscape` → 14 天后 `isHalted()` → 任何 agent 用 `escapeCollect(agentId, to)` 按 BSC 侧净入桥额领池子里现在和以后的每一笔 BNB。**不需要我们、不需要中继、不需要证明数据。** 锁在桥里的 AGNT 没有任何路径转给任何人，`burnLocked()` 是唯一出口且目标写死为死地址 |
 | 2 | **中继私钥泄露** | 超发方向：损失为零（`postAnchor` 的硬检查让它再也发不出合法锚点）。退出方向：每纪元最多 2–5% 的桥池（`RELEASE_BPS`），零见证时另受「30 纪元累计 ≤ 15%」约束；单地址上限可拆号绕过（M2） | ① 任何 watchdog 一笔 `BacBridge.pause()` 立即冻结 `collect`（**不冻结 `claimExit`** —— 冻它等于把在途退出者的本金烧光；**不能冻结 `escapeCollect`**；累计上限 21 天，冻满即自动打开逃生口）；② veto 钥逐纪元作废（**同时让偷来的、不满 14 天的 `owed` 在停机时拿不到优先级** —— 这是把「防御动作替小偷结账」翻过来的关键）；③ admin 48h 时锁轮换 BSC 侧中继；④ 层内用创世写死的 `ROTATION_SIGNER` 冷钥离线签名换中继，任何人可提交 |
 | 3 | **PoA 签名私钥泄露** | 攻击者可产出竞争链 | veto 全部后续纪元；`clique_propose` 投入新签名者并投出旧的；见证人会看到 `l2BlockHash` 对不上并 `DISPUTED`；必要时直接走逃生 |
 | 4 | **签名节点停摆** | 层停止出块，BSC 侧一分不动 | 私钥离线备份，换机 `geth init` + 恢复 datadir 即可恢复（Clique 不需要共识恢复流程）；72 小时内恢复则中继按序逐个补发缺的纪元（不可跳号） |
 | 5 | **桥池不够分** | 退出的人拿得很少 | 结构上分不穿：退出是按份额分池子而非按面值兑付。必须在 `description()`、网站规则卡、X 首条回复同时写明：**退出按桥池份额，不承诺任何金额，可能远低于投入价值** |
-| 6 | **BSC 重组回滚了一笔已 credit 的存款** | `totalCreditsIssued` 回退 | 三重确认（`finalized` + 深度 15 + 45 秒）+ 发送前收据二次核对；`finalized` 取不到时**退回「深度 ≥ 1200 块且 ≥ 600 秒」**，连续 10 分钟取不到则**中继停止发 `credit` 并在 `/api/health` 打 `bsc_finality_unavailable`**（fail-closed：`credit` 迟到几分钟只是体验问题，`credit` 发错是不可恢复的）。真发生时的**可执行**预案是：**运营方在 BSC 上用自己的 agent 身份补 `lock` 等额 BAC**，把 `totalCreditsIssued` 抬回去，锚点立刻可以继续发；代价由运营方承担，不动任何用户的积分，不需要任何新权力。早先写的「中继必须先在层内销毁多出的积分」**在合约里根本没有这条路径**（`L2Bridge` 里中继只能 `credit`，销毁只能由持有者自己 `exit`），那是一条不可执行的预案，已删除 |
+| 6 | **BSC 重组回滚了一笔已 credit 的存款** | `totalCreditsIssued` 回退 | 三重确认（`finalized` + 深度 15 + 45 秒）+ 发送前收据二次核对；`finalized` 取不到时**退回「深度 ≥ 1200 块且 ≥ 600 秒」**，连续 10 分钟取不到则**中继停止发 `credit` 并在 `/api/health` 打 `bsc_finality_unavailable`**（fail-closed：`credit` 迟到几分钟只是体验问题，`credit` 发错是不可恢复的）。真发生时的**可执行**预案是：**运营方在 BSC 上用自己的 agent 身份补 `lock` 等额 AGNT**，把 `totalCreditsIssued` 抬回去，锚点立刻可以继续发；代价由运营方承担，不动任何用户的积分，不需要任何新权力。早先写的「中继必须先在层内销毁多出的积分」**在合约里根本没有这条路径**（`L2Bridge` 里中继只能 `credit`，销毁只能由持有者自己 `exit`），那是一条不可执行的预案，已删除 |
 | 7 | **agent 刷链** | 层被塞满，磁盘涨 | §6.4：EIP-1559 涨价曲线 + `--txpool.accountslots` + `--txpool.pricelimit` + 公告上限 + 体积告警。限速必须公开 |
 | 8 | **`receive()` 被玩坏** | 直接打 BNB = 捐赠，按 50/50 分掉；零增量 dispatch = 静默 no-op | 最致命的是 `receive()` revert（**永久没收**那笔 dispatch 的份额）或超 1,000,000 gas（整个 `dispatch()` 对所有接收方失败）→ 里面只有 `_syncRevenue()`，测试覆盖 `call{gas: 50_000}` 成功、冷 < 50k、暖 < 30k |
 | 9 | **下游拒收推送** | `BacBridge` / `BacNodeFund` 的 `acceptRelease()` revert | 记 `stuckBridge` / `stuckNodeFund` 并发 `PushFailed`，无许可 `retryPush()` 重试（**推送前先清零，失败由 `_push` 加回** —— 反过来写会让每次失败的重试把 `stuck*` 再加一遍，翻倍到超过余额之后 `call` 永远返回 false，钱永久锁死），`settle()` 绝不因此 revert |
@@ -755,7 +755,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 | 11 | **Guardian 升级了金库** | 已推到 `BacBridge` / `BacNodeFund` 的钱不受影响 | 可被改变的只有未来税收去向和两次 dispatch 之间的零头。页脚保留 rat 那句已获批准的 `Flap Guardian (Flap team) can upgrade the vault at any time.` |
 | 12 | **Flap 改了 `marketAddress`** | 税收不再进我们的金库 | 发射后 5 分钟硬停里有这一条；之后索引器每小时对拍，不一致就挂红条并**停止一切宣传** |
 | 13 | **`95-179-183-132.sslip.io` 签不下证书** | 网站右半边全黑（混合内容会被浏览器拦死） | 左半边（BSC，Multicall3 直读）照常工作；备选是 Cloudflare Tunnel。写进 runbook |
-| 14 | **agent 部署的合约有洞，别的 agent 被偷** | 层内的损失 | 不管。链上除了三个系统合约、一个分账合约和三个中立工具（Multicall3 / CREATE2 部署器 / WBAC）什么都没有，东西是它们自己造的，这就是这个项目的前提。浏览器对任何合约只显示事实（部署者、字节码大小、调用次数），**不做任何安全评级** |
+| 14 | **agent 部署的合约有洞，别的 agent 被偷** | 层内的损失 | 不管。链上除了三个系统合约、一个分账合约和三个中立工具（Multicall3 / CREATE2 部署器 / WAGNT）什么都没有，东西是它们自己造的，这就是这个项目的前提。浏览器对任何合约只显示事实（部署者、字节码大小、调用次数），**不做任何安全评级** |
 
 ### 7.3 发射后 5 分钟硬停清单（任一失败则暂停一切宣传）
 
@@ -771,7 +771,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 8. `vault.bridge() == $BRIDGE` 且 `vault.nodeFund() == $NODE_FUND`
 9. `BacBridge.bacToken() == token` 且 `BacNodeFund.bacToken() == token`
 10. `vault.solvency()` 三个数自洽：`balance >= accounted` 且 `accounted == unsplit + stuckBridge + stuckNodeFund`
-11. **`IFlapTaxTokenV3(token).state()` ∈ {BondingCurve, TaxEnforcedAntiFarmer, TaxEnforced}，且永远不是 `TaxFree`；`taxRate() == 200`、`buyTaxRate() == 200`、`sellTaxRate() == 200`**
+11. **`IFlapTaxTokenV3(token).state()` ∈ {BondingCurve, TaxEnforcedAntiFarmer, TaxEnforced}，且永远不是 `TaxFree`；`taxRate() == 100`、`buyTaxRate() == 100`、`sellTaxRate() == 100`**
 12. **`antiFarmerDuration()` 等于计划常量**（DIFF 报告，`--strict` 下 exit 1）
 13. **`BacNodeFund.owner()` 读得到，且 `vault.description()` 渲染出来的「节点基金提取人」逐字等于它**（不是金库的 `owner()`）
 14. **`ChainAnchor.lastFinalCirculating() == OPERATOR_FLOAT`（1000e18），且 `BacBridge.totalCreditsIssued() >= OPERATOR_FLOAT`**（创世的 1:1 backing 从第 0 天起就成立）
@@ -791,9 +791,9 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
     全链搜一遍确认没有任何其它东西占住 `0x…0104` / `0x…0105`。
 
 **决策 #22 再加一项（同属创世回读）：**
-17. `0x…0106` 的创世字节码逐字等于本地编译出的 `WBAC` runtime，且 `balance == 0`、storage 全零；
-    `name() == "Wrapped BAC"`、`symbol() == "WBAC"`、`decimals() == 18`、`totalSupply() == 0`。
-    **`totalSupply()` 就是 `address(this).balance`**，所以这一项同时也是「创世没有偷偷给 WBAC 塞币」的证明。
+17. `0x…0106` 的创世字节码逐字等于本地编译出的 `WAGNT` runtime，且 `balance == 0`、storage 全零；
+    `name() == "Wrapped AGNT"`、`symbol() == "WAGNT"`、`decimals() == 18`、`totalSupply() == 0`。
+    **`totalSupply()` 就是 `address(this).balance`**，所以这一项同时也是「创世没有偷偷给 WAGNT 塞币」的证明。
 
 不可强制但必须记录并由网站按链上值显示的：name/symbol 的精确大小写、买卖税、五个 bps、`taxDuration`、`antiFarmerDuration`、`riskLevel`、金库 owner 地址、`BacNodeFund.owner()`。（rat 的真实快照里 12 个字段有 6 个与计划不符 —— **计划值不是链上真相**。）
 
@@ -840,7 +840,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 **排期（D0 是新增的，不能省）：**
 
-- **D0**：钉死 geth 镜像 tag 并用一次性容器验证 Clique 能出第 1 块（G7）；核对 `chainId 56777` 未被占用；重测 BSC 块时间/gas price 并定新的 `PINNED_BLOCK`；重测 `VaultPortal`/`Portal` 的 launch 检查（Portal 已升到 v5.24.0）。
+- **D0**：钉死 geth 镜像 tag 并用一次性容器验证 Clique 能出第 1 块（G7）；核对 `chainId 60606` 未被占用；重测 BSC 块时间/gas price 并定新的 `PINNED_BLOCK`；重测 `VaultPortal`/`Portal` 的 launch 检查（Portal 已升到 v5.24.0）。
 - **D1**：合约骨架 + 单元测试（金库/工厂先行）。
 - **D2**：主网分叉测试（真实 `newTokenV6WithVault`）+ 不变量测试。
 - **D3**：创世生成脚本 + 本地 geth + 5 个层内合约（「部署 → `eth_getCode`/`eth_getStorageAt` → 填 genesis → `geth init` → `cast call` 回读对拍」的闭环脚本，不靠人眼）。
@@ -857,7 +857,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
 
 ## 11. 经济参数（模拟验证）
 
-> **2026-09-23 重算通知。** 决策 #20（纪元 24 小时 → 10 分钟）、#24（退出改为拿 BAC、桥自动回购）、
+> **2026-09-23 重算通知。** 决策 #20（纪元 24 小时 → 10 分钟）、#24（退出改为拿 AGNT、桥自动回购）、
 > #25（锚点等待 24 小时 → 2 分钟）之后，本节 §11.1–§11.5 里**桥池侧的每一个常量与口径都已过时**。
 > 新的、经模拟验证的参数集在 **§11.6**（2026-09-23），依据在 `artifacts/sim/RESULTS-buyback.md`。
 > §11.1–§11.5 原文保留，被覆盖的行加了删除线，**任何实现都以 §11.6 为准**。
@@ -928,7 +928,7 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 |---|---|---|---|
 | ~~`RELEASE_BPS`~~ | ~~**200 / 350 / 500**（每**纪元**）~~ → 见 §11.6：**`RELEASE_DAILY_BPS` 200/350/500，按**天**，再除以 `EPOCHS_PER_DAY = 144`** | ~~不变~~ **改** | ~~3 个纪元可搬走 14%（预算 15%）、30 个纪元 71%（预算 80%）~~ 旧值按每纪元解释，在 144 纪元/天下等于每天 288%，池子当天见底 |
 | ~~`MAX_EXIT_SHARE_BPS` 1000（不可补领）~~ | **1000 + 新增 `MAX_CATCHUP_EPOCHS = 144`** | **改** | ~~持 10% 积分者 17 天拿到应付额九成~~ 那个 17 天是 **M4 之前**的引擎算的；按 M4 的 `reservedTotal` 累加器重算是 **31 天**。10 分钟纪元下若不补领，诚实用户要一天调 144 次 `collect`（§11.6） |
-| 退出分配口径 | **锁定汇率（M1）** ~~（应付额以 BNB 计）~~ → **应付额改以 BAC 计**（§11.6） | **改** | 10 分钟纪元 + BAC 计价下重测：先发 **0.99x–1.06x**（p95 ≤ 1.08x）、同纪元横向 **1.00x**、盯着回购退出的择时优势 **1.00x**。见 `RESULTS-buyback.md` §1.1 / §1.2 |
+| 退出分配口径 | **锁定汇率（M1）** ~~（应付额以 BNB 计）~~ → **应付额改以 AGNT 计**（§11.6） | **改** | 10 分钟纪元 + AGNT 计价下重测：先发 **0.99x–1.06x**（p95 ≤ 1.08x）、同纪元横向 **1.00x**、盯着回购退出的择时优势 **1.00x**。见 `RESULTS-buyback.md` §1.1 / §1.2 |
 | `pot` 的 leftover | **留在 `reservedTotal` 里，等人来领（M4）** | **改** | 滚进下一纪元的 pot 在队列口径下把先发优势从 1.72x 抬到 3.75x；退回让 `pot_e` 恒等于「一个纪元的释放额」，链上可独立核对 |
 | ~~`CLAIM_WINDOW`~~ | **删除**（M4） | **改** | 它在 `01` 的旧规格里仍然是 `claimExit` 的硬截止，与本表「只管 pot」的说法直接冲突，而实现只会照 `01` 写。M4 之后 `claimExit` 没有任何时间窗口，`owed` 与 `unclaimed` 都永不过期；逐纪元的 `pot` / `sweepEpochPot` / `POT_SWEEP_DELAY` 整套机制一起删除，换成单一累加器 |
 | `reservedTotal` 的约束 | `<= owedTotal` | **新增**（M4） | 旧的 `earmarkedTotal` 是单调棘轮：没人有动机调 `sweepEpochPot`，`freeForRelease` 单调收缩，约 60–70 个纪元后 `pot → 0`，桥池有钱、有债、但每纪元释放额是 0，而不变量 B3 照样成立（测试抓不到） |
@@ -949,16 +949,16 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 | 量 | 值 | 口径 |
 |---|---|---|
 | 单节点月成本 | **0.00889 BNB** | 机器 5 USD/月 = 0.00833 + BSC gas 0.00055（BNB = 600 USD、0.10 gwei、每纪元 commit+reveal 约 175k gas） |
-| 打平所需日成交额 | 10 个验证者 **0.8 BNB/天**；64 个 **5.3 BNB/天** | 税 2% → 协议费 10% → 节点基金 50% → `VALIDATOR_BPS` 40% |
+| 打平所需日成交额 | 10 个验证者 **1.6 BNB/天**；64 个 **10.6 BNB/天** | 税 1% → 协议费 10% → 节点基金 50% → `VALIDATOR_BPS` 40%（税率由 2% 减半，所需成交额翻倍） |
 | 自由进入均衡人数 `N*` | `dead` **2** · `modest` **64（触顶）** · `viral` 远超 64 | `N* = 每月奖励注入 ÷ 成本线`（2x 成本线口径） |
 
 ### 11.4 桥池与兑付率的三句实话（必须进 FAQ 与网站规则卡）
 
-> **2026-09-23：第 1、2、3 句都要按 §11.6 改写**（退出拿到的是 BAC，不是 BNB），
-> 并且必须**新增第 4 句**（退出拿 BAC 比拿 BNB 至少贵 4%，其中约 1.8% 落进 owner 可提的节点基金）。
-> 下面三句的机制描述仍然成立，只要把「BNB」换成「桥里回购来的 BAC」。
+> **2026-09-23：第 1、2、3 句都要按 §11.6 改写**（退出拿到的是 AGNT，不是 BNB），
+> 并且必须**新增第 4 句**（退出拿 AGNT 比拿 BNB 至少贵 2%，其中约 0.9% 落进 owner 可提的节点基金）。
+> 下面三句的机制描述仍然成立，只要把「BNB」换成「桥里回购来的 AGNT」。
 
-1. **进桥的 BAC 一分都不进桥池。** BAC 锁在 `BacBridge` 里，唯一出口是写死的死地址；
+1. **进桥的 AGNT 一分都不进桥池。** AGNT 锁在 `BacBridge` 里，唯一出口是写死的死地址；
    桥池只由税收喂养。所以**进桥的 agent 越多，每积分对应的 BNB 越少**。
    实测（`modest` + 快速进桥）：兑付率从第 7 天到第 365 天跌到 **0.07 倍**。
 2. **早退不等于占便宜，也不等于吃亏。** 锁定汇率让同一纪元退出的每个 agent 拿到完全一样的每积分兑付率（1.00x）；
@@ -985,9 +985,9 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 | `Σ escapeShare` | `≤ 1`，且未付清的 `owed` 必须在内 |
 
 
-### 11.6 2026-09-23 重算：10 分钟纪元 + 退出付 BAC（覆盖 §11.3 的 BacBridge 表与 §11.4 的资产口径）
+### 11.6 2026-09-23 重算：10 分钟纪元 + 退出付 AGNT（覆盖 §11.3 的 BacBridge 表与 §11.4 的资产口径）
 
-决策 #20（纪元 24 小时 → 10 分钟）、#24（退出改为拿 BAC、桥用税收在市场上回购）、
+决策 #20（纪元 24 小时 → 10 分钟）、#24（退出改为拿 AGNT、桥用税收在市场上回购）、
 #25（锚点等待 24 小时 → 2 分钟）把 §11.1–§11.5 的三个前提全改了：**时间步、付款资产、有没有人工反应窗口**。
 本小节是重跑之后的参数集，完整表格、被拒方案与理由见 `artifacts/sim/RESULTS-buyback.md`
 （`artifacts/sim/engine_epoch.py` + `sim_buyback.py`，每行 ≥ 2500 条随机路径，Q3 那张表 5000 条）。
@@ -997,18 +997,19 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 
 | 口径 | 做法 | 结论 |
 |---|---|---|
-| **A `STOCK`（选中）** | 桥按有界预算持续回购、囤 `buybackBac`；退出当场按 **BAC 计价**锁定份额 `owedBac` | 先发 0.99x–1.06x（p95 ≤ 1.08x）、同纪元横向 1.00x、择时优势 1.00x、**退出本身对 BAC 价格的冲击恒为 0**、偿付不变式 `owedBacTotal ≤ buybackBac` 按构造成立（9 行 × 2500 条路径零越界） |
-| B `JIT` | 退出按 BNB 计价锁定，`collect` 时现场把这笔 BNB 换成 BAC 发出 | **拒**。每次 `collect` 多约 120,000 gas（+76%），换币时点完全可预测（每个纪元边界之后）是标准三明治靶子，还可能撞上税币 `liquidationThreshold()` 再多约 300,000 gas；买盘也被推迟到 `collect` 才发生（30 天只投入市场 53.0 BNB，A 是 81.1） |
-| C-1 `HYBRID` | BNB 计价的债 + BAC 存货 | **拒**。只要债是 BNB 计价而资产是 BAC，偿付不变式就随币价浮动：`modest` + 日波动 14% 时 **21.4%** 的路径出现「存货市值 < owedTotal」，缺口中位 25.0% |
-| C-2 `HYBRID` | BAC 计价的债 + 领取时触发补买 | **拒**。偿付安全，但把回购的执行时点交给了任意调用者：单笔补买最大冲击 7.16%（A 是 0.89%），等于给桥装了一个「按需触发的大买单」按钮 |
+| **A `STOCK`（选中）** | 桥按有界预算持续回购、囤 `buybackBac`；退出当场按 **AGNT 计价**锁定份额 `owedBac` | 先发 0.99x–1.06x（p95 ≤ 1.08x）、同纪元横向 1.00x、择时优势 1.00x、**退出本身对 AGNT 价格的冲击恒为 0**、偿付不变式 `owedBacTotal ≤ buybackBac` 按构造成立（9 行 × 2500 条路径零越界） |
+| B `JIT` | 退出按 BNB 计价锁定，`collect` 时现场把这笔 BNB 换成 AGNT 发出 | **拒**。每次 `collect` 多约 120,000 gas（+76%），换币时点完全可预测（每个纪元边界之后）是标准三明治靶子，还可能撞上税币 `liquidationThreshold()` 再多约 300,000 gas；买盘也被推迟到 `collect` 才发生（30 天只投入市场 53.0 BNB，A 是 81.1） |
+| C-1 `HYBRID` | BNB 计价的债 + AGNT 存货 | **拒**。只要债是 BNB 计价而资产是 AGNT，偿付不变式就随币价浮动：`modest` + 日波动 14% 时 **21.4%** 的路径出现「存货市值 < owedTotal」，缺口中位 25.0% |
+| C-2 `HYBRID` | AGNT 计价的债 + 领取时触发补买 | **拒**。偿付安全，但把回购的执行时点交给了任意调用者：单笔补买最大冲击 7.16%（A 是 0.89%），等于给桥装了一个「按需触发的大买单」按钮 |
 
 **代价必须照实说（覆盖决策 #24b 的「约 4%」）：** 每 1 BNB 的交易税，旧口径给退出者 **0.4500 BNB**；
-新口径下桥里 BAC 的中间价市值是 **0.4428（−1.60%）**，退出者若再换回 BNB 只剩 **0.4318（−4.05%）**。
+新口径下桥里 AGNT 的中间价市值是 **0.4428（−1.60%）**，退出者若再换回 BNB 只剩 **0.4318（−4.05%）**。
 这是单边滑点 0.5% 那一档；滑点 1% 是 **−5.02%**，滑点 2% 是 **−6.93%**。
-**文案写「至少 4%，滑点大的时候到 7%」，不许写成「约 4%」一个数。**
-而且这 4%–7% **不是烧掉，是转移**：买入税与卖出税各有 45% 流进 **owner 可提的官方节点基金**（合计约 **1.8%**），
-约 0.4% 归 Flap，滑点归池子与其他 BAC 持有者，另有约 1.8% 通过买入税回流回桥池。
-**「退出者每走一次市场约 0.9% 落进 owner 的节点基金，来回两趟约 1.8%」这句话必须和
+（以上是买卖税 2% 时的模拟值。2026-09-28 税率改为 1%，模拟未重跑；两次过税各少 1 个点，下面的口径按此改写。）
+**文案写「至少 2%，滑点大的时候约 5%」，不许写成「约 2%」一个数。**
+而且这 2%–5% **不是烧掉，是转移**：买入税与卖出税各有 45% 流进 **owner 可提的官方节点基金**（合计约 **0.9%**），
+约 0.2% 归 Flap，滑点归池子与其他 AGNT 持有者，另有约 0.9% 通过买入税回流回桥池。
+**「退出者每走一次市场约 0.45% 落进 owner 的节点基金，来回两趟约 0.9%」这句话必须和
 §3.4「owner 可提节点基金这一半」写在同一段里** —— 这是决策 #24 带来的**新增利益冲突**。
 
 #### 11.6.2 桥池常量（覆盖 §11.3 的 BacBridge 表）
@@ -1026,7 +1027,7 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 | `NO_ATTEST_WINDOW_BPS` | 1500（不变） | 1500 | 同上 |
 | `OWED_MATURITY` | **14 days，明令禁止跟着纪元缩** | 14 days | 2 分钟等待之后它是停机逃生里唯一剩下的时间护栏 |
 | `revokeEpochOwed(uint64 epoch)` | **新增**，暂停期间由 watchdog 调用 | — | 见 §11.6.4 |
-| 付款资产 | **`buybackBac`**，`owed` 以 **BAC** 计价 | ~~BNB~~ | §11.6.1 |
+| 付款资产 | **`buybackBac`**，`owed` 以 **AGNT** 计价 | ~~BNB~~ | §11.6.1 |
 | `lockedBac` | 只增不减，唯一出口 `burnLocked()` → `0x…dEaD`，**任何退出路径不得读写它** | — | 决策 #24a |
 
 **回购参数（全部新增）**
@@ -1110,8 +1111,8 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
    持 10% 积分者把应付额领到九成要 **31 天**（这也顺带修正了 §11.3 那个 **17 天** —— 那是 M4 之前的引擎算的，
    按 M4 的 `reservedTotal` 累加器重算是 31 天）。
    正确写法：**「12–13 分钟后锁定汇率并开始领取，领完仍然要按每天最多 2%–5% 的速度慢慢领。」**
-2. **§11.4 的三句实话要加第 4 句**：退出拿 BAC 比拿 BNB **至少贵 4%、滑点大时到 7%**，
-   其中约 1.8% 落进 owner 可提的官方节点基金。**不许写成「退出更划算」。**
+2. **§11.4 的三句实话要加第 4 句**：退出拿 AGNT 比拿 BNB **至少贵 2%、滑点大时约 5%**，
+   其中约 0.9% 落进 owner 可提的官方节点基金。**不许写成「退出更划算」。**
 
 
 ---
@@ -1138,7 +1139,7 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 | 7 | flap A8 | high | **已修** | `settle()` / `retryPush()` 加进 `vaultUISchema().methods`（8 → 10，`inputs`/`outputs`/`approvals` 全为空数组，`isWriteMethod = true`，flap.sh 渲染成两个 Submit 按钮）；`vaultUISchema().description` 的「立即推走」改成「任何人都可以按 Settle 推走，没有人因此拿到报酬」；`00` §2 信任表的 Guardian 行同步改写，并加「官方索引器每纪元调一次」的运营承诺 + 告警。 |
 | 8 | flap A9 | medium | **已修** | `_push` 里加 `require(gasleft() >= PUSH_GAS * 64 / 63 + 10_000)`，堵住「用恰好不够的 gas 调 `settle()` 把每笔收入打进 `stuck*`」。 |
 | 9 | flap A10 | medium | **已修** | 三段冻结文案统一改成「税收 + 捐赠 + 强推余额 + 被没收的 agent 押金」都按同一比例分账。 |
-| 10 | flap A11 | medium | **不修（设计选择，已披露）** | 金库不加 Guardian-only 的代币救援函数。规则 009 允许写，但冻结文案已经逐字承诺「没有任何救援函数」，加了就是自打脸；误转进金库的 BAC 会按 50/50 分成 BNB 之外的死账，这一点在 FAQ 里照实写。**代价：误转的代币拿不回来。** |
+| 10 | flap A11 | medium | **不修（设计选择，已披露）** | 金库不加 Guardian-only 的代币救援函数。规则 009 允许写，但冻结文案已经逐字承诺「没有任何救援函数」，加了就是自打脸；误转进金库的 AGNT 会按 50/50 分成 BNB 之外的死账，这一点在 FAQ 里照实写。**代价：误转的代币拿不回来。** |
 | 11 | flap A12 | medium | **已修** | `tokenCreationPolicies()` 从 6 条补到 8 条（加 `deflationBps` / `lpBps`）；第 9 条（`dividendToken != MAGIC`）是「不等于」语义，`FactoryPolicy` 只有等值 op，写成 `eq address(0)` 是假披露，**只留在钩子里**并在 §1.4 写明理由。 |
 | 12 | flap A13 | medium | **已修** | `sweepForfeited()` 明确要求 `gasleft() >= 150_000` 并用 `call{value:}("")` 转发全部剩余 gas；禁止 `transfer`/`send`（2300 gas 会让它永久 revert，金库 `receive()` 冷路径约 47.8k）。§10 加一条反向测试。 |
 | 13 | flap A14 | medium | **已修** | 删掉 `AgentRegistry` 里那个永远不会被赋值的 `address public immutable VAULT_SINK;`（它会直接编译失败），只留 `address public vaultSink;`。 |
@@ -1186,7 +1187,7 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 | 40 | gate #5 | blocker | **已修（措辞级，但这是核心主张）** | `00` §4.2 第 4 条从「协议级闸门（真正硬的一条）」改写成「**一次性入金闸门，不是动作闸门**」，并列出层内唯一读身份的地方（只有 `AgentBook.announce`）；§4.3 补上「进场后把积分转给普通地址、此后手点做一切 —— 做得到且不可检测」；§4.1 的那句核心文案按评审建议逐字重写；浏览器必须给未注册地址的动作明显不同的样式。 |
 | 41 | gate #13 | high | **已修** | `epochSeed` 改成**两阶段延后封存**（记锚点高度 → `SEED_SEAL_DELAY = 64` 块后才用那个块的哈希封存，256 块窗口，超时则该纪元不抽查、fail-open）；心跳加纪元内时限（封存后 `HB_WINDOW_BLOCKS = 600` 块 ≈ 4.5 分钟）。这两条落地之后，§4.1 那句「一直在线」才重新成立。 |
 | 42 | funds #12 | high | **已修** | `L2Bridge.credit` 改成**拉取模式**（只写 `creditable[to] += amount`，零外部调用）+ 无许可的 `withdrawCredits(to)`；`AgentRegistry.register` 要求 `agentWallet` 自己的 EIP-712 签名且 `agentIdOfWallet == 0`；中继 outbox 新增 `parked` 状态（连续失败 N 次跳过并告警，不阻塞队列）。 |
-| 43 | gate #12 / funds 补充 | high | **已修** | 重组善后改成**运营方在 BSC 上补 `lock` 等额 BAC**（无许可、不动用户积分、不需要新权力）；删掉「中继必须先在层内销毁多出的积分」这句不可执行的预案；另给 `L2Bridge` 加 `burnFloat()`（只能烧调用者自己的积分，供运营方主动缩表，**不是**重组手段）。 |
+| 43 | gate #12 / funds 补充 | high | **已修** | 重组善后改成**运营方在 BSC 上补 `lock` 等额 AGNT**（无许可、不动用户积分、不需要新权力）；删掉「中继必须先在层内销毁多出的积分」这句不可执行的预案；另给 `L2Bridge` 加 `burnFloat()`（只能烧调用者自己的积分，供运营方主动缩表，**不是**重组手段）。 |
 | 44 | gate #10 | high | **已修** | `compose.yml` 的 `--gcmode=archive` 改成 `--gcmode=full`（pathdb 不支持 archive，v1.13/v1.14 启动即 fatal）；新增 **D0-4** 验证这条；全量历史由索引器承担；`eth_call` 明确只支持最近 128 个区块的状态。`02` [待定] 3 结掉。 |
 | 45 | gate #11 | high | **已修** | 把「Clique 签名者调 `gasLimit`」写成主要且唯一真实的控制手段（`02` §4.3 + §5.4 的应急流程 + 触发线），并写进 `00` §2 信任表；`--txpool.pricelimit` 从 1 gwei 改成 **0**；原先四条「缓解」在 `00` §6.4 与 `02` §4.3 照实降级成效果表（含「EIP-1559 在单签名者链上是攻击者的武器」）。 |
 | 46 | gate #15 | medium | **已修** | `reissueChallenge` 要求已超时 + `REISSUE_COOLDOWN = 60 s`，**第三方调用不累加任何计数器**（R5）；没收条件写死为 `MAX_FAILED_ROUNDS = 10`；`CHALLENGED` 超 24 小时未激活则**押金原路退还**。 |
@@ -1209,9 +1210,9 @@ cause 1/4/5 下不成熟的在 `haltedAt + 14 天`后照样足额领，
 ## [待定]
 
 1. **验证者奖励要不要变成合约强制分账（模拟已给出数字，仍需你拍板）。** v1 按决策 #10 写成「节点基金归 owner 提取 + 运营方手动注入奖励池」。模拟结论（`artifacts/sim/RESULTS.md` 表 2.5 / 2.6）：`VALIDATOR_BPS = 4000`（节点基金的 40% 自动推给 `ValidatorStaking`，owner 只能提 60%）时，`modest` / `viral` 情景下 10 个验证者 100% 达标，`dead` 情景 64.5%；`2000` 在 `dead` 只有 25.3%，`6000` 能把 `dead` 抬到 89% 但更削弱决策 #10。**`VALIDATOR_BPS = 0`（现状）无法模拟 —— 这本身就是结论：v1 的验证者奖励不是机制，是承诺。** 建议改成 4000，但这削弱决策 #10，需要你拍板。
-2. **`chainId = 56777` 是否被占用** —— 生成创世文件之前必须在 chainlist.org 与 github.com/ethereum-lists/chains 逐字搜；被占则退 56778，并提交登记 PR。链 ID 一旦出块不能改。
+2. **`chainId = 60606` 是否被占用** —— 生成创世文件之前必须在 chainlist.org 与 github.com/ethereum-lists/chains 逐字搜；被占则退 56778，并提交登记 PR。链 ID 一旦出块不能改。
 3. **页脚第 1 行、`description()`、`vaultDataSchema().description` 的最终中文措辞** —— 三处必须逐字一致，部署即冻结，需要用户逐字批准。
-4. **买卖税定死为 2% / 2%** —— 本设计用 `==` 钉死；如果用户想要别的数字，hook、policies、手册、`sim_launch.sh`、`verify_launch.py`、fork 测试常量六处要同步改。
+4. **买卖税定死为 1% / 1%**（2026-09-28 由 2% 改为 1%）—— 本设计用 `==` 钉死；如果用户想要别的数字，hook、policies、手册、`sim_launch.sh`、`verify_launch.py`、fork 测试常量六处要同步改。
 5. **名称 / 符号 / 简介 / Logo / 网站 / X 账号的最终字符串** —— 名称和符号发射后永远改不了（含大小写）。
 6. **三个地址**：`LAUNCHER`（发射钱包，会被写进工厂 immutable，换钱包就只能重部工厂）、金库 `owner`、`BacNodeFund` 受益地址。
 7. **是否用 `Portal.lockSalt(bytes32, TokenVersion)` 预定 `…7777` 地址** —— `BacBridge` 的 `bacToken` 是构造时写死的预测地址，salt 被别人占用就要重部桥。费用未知，需先 `cast call` 测。

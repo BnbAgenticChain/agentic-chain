@@ -139,7 +139,7 @@ cast rpc eth_getBlockByNumber '"latest"' false --rpc-url http://127.0.0.1:8545 |
 ### 2.4 告警项（`scripts/alert.sh`，crontab 每 5 分钟）
 
 出块延迟 > 30 s · 锚点超 `epochEnd + 2h` 未发 · 连续 3 纪元零见证 · 对账差额非零 ·
-中继 BSC 余额 < 0.05 BNB 或层内余额 < 100 BAC · node key 文件哈希变更 ·
+中继 BSC 余额 < 0.05 BNB 或层内余额 < 100 AGNT · node key 文件哈希变更 ·
 验证者集与预期不一致 · 任一 validator 余额减少 · JVM 堆使用率 > 85% 持续 10 分钟 ·
 容器 OOM-kill 计数 > 0 · 层内 head 与 BSC head 时间戳差 > 120 秒 ·
 `data/besu` 或 `index.db` 越过下面的阈值 · 层内出现 parentHash 断链 ·
@@ -174,7 +174,7 @@ Bonsai 的 trie log 与状态同写在主 RocksDB 里（实测是 `data/database
 
 ## 4. 状态膨胀应急：唯一真实的控制手段
 
-`1 gwei × 20,000,000 gas × 28,800 块/天 = 576 BAC/天就能填满全链每一个块`。
+`1 gwei × 20,000,000 gas × 28,800 块/天 = 576 AGNT/天就能填满全链每一个块`。
 所以「gas 要花真钱所以刷不动」是错的，文档和网站都不许这么写。真正的约束是磁盘，
 真正的手段只有一个：**validator 下调 gasLimit**。
 
@@ -293,7 +293,7 @@ cast block-number --rpc-url http://127.0.0.1:8545   # 确认从原高度续上
 ```bash
 docker compose logs --tail 200 relayer            # 看最后一次成功的方向与区间
 cast balance $RELAYER_BSC --rpc-url $BSC_RPC      # < 0.05 BNB 就发不出锚点
-cast balance $RELAYER_LAYER --rpc-url http://127.0.0.1:8545   # < 100 BAC 就 credit 不动
+cast balance $RELAYER_LAYER --rpc-url http://127.0.0.1:8545   # < 100 AGNT 就 credit 不动
 curl -s https://$BAC_SITE_HOST/api/health | grep -i anchor
 ```
 
@@ -422,7 +422,7 @@ WATCHDOG_PRIVATE_KEY=
 ENV
 chmod 600 /opt/bac/secrets/watchdog.env
 # 这把钥匙在 BacBridge 里是 immutable 的 `watchdog`，它能做的只有
-# pause / unpause / armEscape / revokeEpochOwed —— **没有任何一条路径能动 BNB 或 BAC**。
+# pause / unpause / armEscape / revokeEpochOwed —— **没有任何一条路径能动 BNB 或 AGNT**。
 
 # ② 现读链上，确认这把钥匙确实是那把钥匙（容器启动时也会自检，但这一步要先手动过一遍）
 cast call $BAC_BRIDGE "watchdog()(address)" --rpc-url $BSC_RPC
@@ -476,10 +476,10 @@ compose 里是 `restart: "on-failure:3"`，不是 `unless-stopped`：跳闸之�
 | 规则 ID | 一句话 | 会不会暂停 | 人该怎么理解 |
 |---|---|---|---|
 | `anchor_root` | 链上锚点里的 `exitRoot`（或 `l2Block` / `exitCredits` / `credited`）与看门狗从层内日志独立复算的结果不一致 | **会** | **这是最严重的一条**。它意味着中继发了一个不对应任何真实退出的根，也就是中继私钥可能已经泄露。 |
-| `buckets` | 两个 BAC 桶与代币真实余额对不上，或 `lockedBac` 的增量与 `Locked` 事件之和对不上 | **会** | 两个桶的记账被破坏了，或者有 BAC 在账本之外离开了桥。**注意决策 #29：桥改成可升级 + `emergencyWithdraw` 之后，owner 的合法动作也会触发这条**——处理前先确认那笔变动是不是 owner 自己做的。 |
+| `buckets` | 两个 AGNT 桶与代币真实余额对不上，或 `lockedBac` 的增量与 `Locked` 事件之和对不上 | **会** | 两个桶的记账被破坏了，或者有 AGNT 在账本之外离开了桥。**注意决策 #29：桥改成可升级 + `emergencyWithdraw` 之后，owner 的合法动作也会触发这条**——处理前先确认那笔变动是不是 owner 自己做的。 |
 | `reconcile` | 对账恒等式 `diff < 0` | **会** | 层内的积分比 BSC 上锁定的多 = 超发。`diff > 0` 只告警（在途存款 / 在途退出会让它正常变正）。 |
 | `release_cap` | 某一纪元的 `pot` 超过按链上算式复算的上限，或 `releaseBps` 不是 200/350/500 之一，或滚动 24 小时超过每天上限 | **会** | 那道「每天最多 2%–5%」的闸门失效了。 |
-| `buyback` | 单笔回购花的 BNB 越界，或买到 0 个 BAC，或（读得到历史价时）滑点击穿下限 | **会** | 回购被夹了，或者链上那份合约不是我们审过的那一份。 |
+| `buyback` | 单笔回购花的 BNB 越界，或买到 0 个 AGNT，或（读得到历史价时）滑点击穿下限 | **会** | 回购被夹了，或者链上那份合约不是我们审过的那一份。 |
 | `cadence` | 锚点落后 ≥ 3 个纪元 | **绝不会** | 中继停摆是**可用性**问题，没有一分钱被多放出去。这时候 `pause()` 只会把「退出慢」变成「退出停」，还白吃掉 21 天暂停额度里的一段。按 §7.1 处理中继，不要去暂停桥。 |
 
 另外三类只告警、不暂停的：`buyback` 读不到归档节点时的单价异常、

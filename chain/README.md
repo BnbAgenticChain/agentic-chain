@@ -13,7 +13,7 @@
 | 文件 | 是什么 | 对应规格 |
 |---|---|---|
 | `qbftConfigFile.json` | 喂给 `besu operator generate-blockchain-config` 的输入模板。它产出 `genesis.json` 的 `config` 段、RLP 编码的 `extraData`，以及一把 node key | `02-CHAIN-SPEC.md` §3.1 |
-| `genesis.template.json` | ✅ §3.2 的完整创世模板，**10 个占位符**（比原文多了 `FEESPLITTER`、`CREATE2_DEPLOYER` 与 `WBAC`，见 §3.2 的 2026-09-23 更正与决策 #22） | §3.2 |
+| `genesis.template.json` | ✅ §3.2 的完整创世模板，**10 个占位符**（比原文多了 `FEESPLITTER`、`CREATE2_DEPLOYER` 与 `WAGNT`，见 §3.2 的 2026-09-23 更正与决策 #22） | §3.2 |
 | `build-genesis.sh` | ✅ 生成 + 校验。`--rehearsal` 是无 Docker 的本机演练。结尾打印 `GENESIS BUILD PASSED`（演练模式打印 `REHEARSAL COMPLETE`，永远不会冒充正式创世） | §3.3 |
 | `verify-genesis.sh` | ✅ 回读对拍：用创世起一台一次性节点，逐字节比对 alloc 的代码与余额、读回所有 view、核对 QBFT 验证者集、证明 cancun 真的在跑、打印创世哈希 | §3.3 步骤 6–10 |
 | `scripts/fill_genesis.py` | ✅ 填占位符并拒收任何可检测的错误（金额算术、十六进制余额、EIP-170、地址集合、UTC 零点、零 storage） | §3.3 |
@@ -23,7 +23,7 @@
 | `Caddyfile` | ✅ 自动 TLS + `/rpc` `/api` `/health`。`handle_path` 加 `rewrite`，两条实测理由都写在文件里 | §5.3 |
 | `config/log4j2.xml` | ✅ 一行一条日志、不写文件、交给 docker 的 json-file 轮转 | §5.2 |
 | `OPERATIONS.md` | ✅ 运维手册：启动顺序、健康检查、磁盘阈值（按实测 3.8 GB/年）、每周冷备、季度离线 trie log 修剪、中继/索引器/Besu 挂了怎么办、怎么回滚 | §5.4 / §5.5 |
-| `../contracts/script/DeployLayerSystem.s.sol` | ✅ 在一次性 anvil 上部署系统合约 + `WBAC` 供取 runtime 字节码。**只在 chainId 31337 上肯跑**（合约里 require 住了） | §3.3 步骤 2 |
+| `../contracts/script/DeployLayerSystem.s.sol` | ✅ 在一次性 anvil 上部署系统合约 + `WAGNT` 供取 runtime 字节码。**只在 chainId 31337 上肯跑**（合约里 require 住了） | §3.3 步骤 2 |
 | `../contracts/script/CancunProbe.sol` | ✅ 证明 MCOPY/TSTORE 真的能跑。整个探针在构造函数里，用 `eth_call --create` 执行：不发交易、不用私钥、不改状态 | §3.3 步骤 9 |
 | `probe-consensus.sh` | **待建（已实测跑过一次，2026-09-22）。** 一次性容器验证 QBFT + cancun 能出块 | §5.1 |
 | `build/` | 生成产物（`networkFiles/`、`codes.txt`、`genesis.json`、`genesis-manifest.json`）。**含真实私钥，必须在 `.gitignore` 里** | §3.0 |
@@ -45,7 +45,7 @@
 
 | 键 | 值 | 一句话 |
 |---|---|---|
-| `chainId` | `56777` | 决策 #2 / §1。**D0-2 还没做**：必须先在 chainlist.org 与 `ethereum-lists/chains` 确认没被占用，被占则 56778。链一出块就不能改 |
+| `chainId` | `60606` | 决策 #2 / §1。**D0-2 已做（2026-09-28）**：`ethereum-lists/chains`（chainlist.org 的数据源）里没有 60606。链一出块就不能改 |
 | `cancunTime` / `shanghaiTime` | `0` | solc 0.8.26 的默认目标是 cancun。geth Clique 在这一项上 panic，Besu QBFT 实测正常——这是换客户端的第二条理由 |
 | `contractSizeLimit` | `24576` | EIP-170，显式写出来，免得重建创世的人去猜默认值 |
 | `qbft.blockperiodseconds` | `3` | 与原 `clique.period` 同值，28,800 块/天 |

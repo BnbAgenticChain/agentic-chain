@@ -1,4 +1,4 @@
-# BAC 官方中继（relayer）
+# AGNT 官方中继（relayer）
 
 `docs/03-INTERFACES.md` §1 的实现。**一个 Node 22 进程 + 一个 SQLite 文件 + 两条 EOA 私钥**，
 不是协议，不是多签，不是 committee。第一版中继受信任，这一点在网站页脚和文档里明说。
@@ -62,7 +62,7 @@ SQLite 用 Node 22 内置的 `node:sqlite`，**没有原生编译**，`node:22-a
 **重组处理**：发送前用 `eth_getTransactionReceipt` 重读；收据没了 / `blockHash` 变了 / 那条日志不在了
 → `status = "orphaned"`，不发，打告警。
 深于最终性的重组（几乎不可能）没有自动回滚：中继在 `L2Bridge` 里能调的只有 `credit`，销毁只有持有者自己 `exit`。
-预案是**运营方在 BSC 上用自己的 agent 身份补 `lock` 等额 BAC**（无许可，不动任何用户的积分），把
+预案是**运营方在 BSC 上用自己的 agent 身份补 `lock` 等额 AGNT**（无许可，不动任何用户的积分），把
 `totalCreditsIssued` 抬回去，锚点立刻能继续发。
 
 ### 方向 B：层 → BSC（锚点，一个纪元一次）
@@ -162,7 +162,7 @@ npm test    # 86 个用例，全部离线：临时 SQLite 文件 + 假 provider�
    `issued − exited = 4,880,000e18`，而 `layerCirculating + feeSink = 4,879,996.878125e18`，`diff` 实际是
    `3.121875e18`，但样例写的是 `"diff": "0"`。公式本身是对的（代码按公式实现），错的是样例里
    `layerCirculating` 少了三位（应为 `4879999996875000000000000`）。建议改文档的样例数字。
-2. **`01 §6.1` 的 `Anchor` 结构注释里的 leaf 布局仍然带 `epoch`**（`… credits, epoch, 56777, bridge`），
+2. **`01 §6.1` 的 `Anchor` 结构注释里的 leaf 布局仍然带 `epoch`**（`… credits, epoch, 60606, bridge`），
    与同文件 §4.1 的 `EXIT_TYPEHASH`、§8.1 与 `03 §1.3` 的「叶子里没有 epoch」矛盾。
    本实现按 **`EXIT_TYPEHASH`（没有 epoch）**，与 `contracts/src/layer/L2Bridge.sol` 一致。
 3. **`01 §8.2` 的 `L2Gate` ABI 没有 `syncedAt(agentId)`，但 `contracts/src/layer/L2Gate.sol` 有。**

@@ -21,7 +21,7 @@
 | 机器 | 2 vCPU / **4 GB 内存**（Besu 是 JVM，`-Xmx2g` 是下限）/ 60 GB 可用磁盘，Docker 已装 |
 | 端口 | `30303/tcp` **和** `30303/udp` 能进能出（udp 是节点发现，少了它 peers 会是 0） |
 | 时间 | 机器必须开 NTP。承诺截止时间是按**你本机的钟**算的 |
-| BSC 钱包 | `≥ 2,000,000 BAC`（`MIN_STAKE`）+ 一点 BNB 付 gas |
+| BSC 钱包 | `≥ 2,000,000 AGNT`（`MIN_STAKE`）+ 一点 BNB 付 gas |
 | Node | 22+（只有 `ethers@6.13.4` 一个依赖；也可以只用 compose 里的 `attester` 容器） |
 
 ```bash
@@ -99,7 +99,7 @@ bac-node start
   docker: Docker Compose version v2.29.0
   [ok]   容器已拉起，正在等节点回应 RPC …
   [ok]   创世哈希 0x9c1e… 与公布值一致
-  [ok]   chainId 56777
+  [ok]   chainId 60606
 
 起来了。接下来：
   bac-node status    看同步进度与本纪元的见证状态
@@ -143,7 +143,7 @@ bac-node doctor
   [ok]   docker compose 可用：Docker Compose version v2.29.0
   [ok]   besu 容器：状态 running
   [ok]   本地层内 RPC：head #1234567
-  [ok]   链 ID：56777
+  [ok]   链 ID：60606
   [ok]   创世哈希：0x9c1e…
   [FAIL] 对端数：0 个对端：你在自说自话，高度不会涨
          怎么办：bootnodes 填对了吗（/api/health 的 layer.enode）？30303 的 tcp 和 udp 都要能出去；
@@ -180,7 +180,7 @@ bac-node register --node-id my-node-01 --payout 0x<收款地址> --yes
 ```
 
 ```
-  你的 BAC 余额 5,000,000，要质押 2,000,000
+  你的 AGNT 余额 5,000,000，要质押 2,000,000
   将要发的交易：
     from     0x…
     to       0x…（ValidatorStaking）
@@ -190,7 +190,7 @@ bac-node register --node-id my-node-01 --payout 0x<收款地址> --yes
 
 几条合约规则，程序会提前拦住你，省得白烧 gas：
 
-- **每个节点都要一份独立达标的质押**：注册第 N 个节点需要 `N × 2,000,000 BAC`。
+- **每个节点都要一份独立达标的质押**：注册第 N 个节点需要 `N × 2,000,000 AGNT`。
 - **权重按地址算，不按节点算**：同一个地址注册多个节点，见证权重和奖励**不会**变成多份。
 - **减仓前要先退节点**：`requestUnstake` 会检查 `staked − amount >= MIN_STAKE × 你的节点数`。
 
@@ -307,7 +307,7 @@ bac-node status
 
 见证身份
   地址 0x…
-  质押 2,000,000 BAC
+  质押 2,000,000 AGNT
   [ok]   节点 my-node-01：active，strikes 0
 
 见证进度

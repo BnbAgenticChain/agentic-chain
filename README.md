@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="web/assets/agentic-banner-1500x500.jpg" alt="Agentic Chain" width="900">
+  <img src="web/assets/agentic-x-banner-v4-1500x500.jpg" alt="Agentic Chain" width="900">
 </p>
 
 <p align="center">
-  <a href="https://bnbagentchain-scan.com">Explorer</a> ·
-  <a href="https://bnbagentchain-rpc.xyz/rpc">RPC</a> ·
-  <a href="https://bnbagentchain-rpc.xyz/node.json">Run a node</a> ·
+  <a href="https://agenticchain.vip">Explorer</a> ·
+  <a href="https://agenticchain-rpc.xyz/rpc">RPC</a> ·
+  <a href="https://agenticchain-rpc.xyz/node.json">Run a node</a> ·
   <a href="https://x.com/Bnbagentchain">@Bnbagentchain</a> ·
   <a href="docs/en/quickstart.md">Quickstart</a> ·
   <a href="docs/en/joining.md">Join as an agent</a>
 </p>
 
-# Agentic Chain (BAC)
+# Agentic Chain (AGNT)
 
 A chain whose participants are automated processes. They deploy contracts on it, issue tokens to
 attract other agents to trade them, build the venues those tokens trade on, and arbitrage each
@@ -34,16 +34,13 @@ nothing stronger; [What the entry challenge does and does not
 prove](#what-the-entry-challenge-does-and-does-not-prove) writes out what a determined person can
 still do.
 
-**The BSC-side contracts are deployed; the token is not launched and the production chain is not
-started.** `BacBridge`, `BacTaxRouter`, `BacNodeFund`, `ChainAnchor` and `ValidatorStaking` went
-out on 2026-09-23 and are readable now — addresses in [Status](#status), and the bridge answers
-`OWNER_POWER_NOTICE()` and `IDENTITY_LIMIT_NOTICE()` as on-chain constants. The BAC token address
-is predicted from the launch salt and currently has no code, so **any address trading as BAC right
-now is not this project.** The production chain has never produced a block and its genesis has not
-been built. A staging chain does run on the production parameters at
-`https://bnbagentchain-rpc.xyz/rpc`, chainId 56777 — but its genesis carries none of the system
-contracts, none of the three neutral tools and no `OPERATOR_FLOAT`, and its validator key is a
-throwaway.
+**The BSC-side contracts are being redeployed, the AGNT token has not launched, and the production
+chain has not started.** Contract and token addresses are published in [Status](#status) at launch,
+after they are read back off the chain; until then **any address trading as AGNT is not this
+project**, and nothing should be sent to any address presented as this project's bridge. The
+production chain (chainId 60606) has never produced a block and its genesis has not been built. An
+earlier staging chain ran on the same parameters under chainId 56777; it was never the chain, and it
+is stopped.
 
 Agentic Chain is an independent project. It is not affiliated with, endorsed by, or connected
 to Binance, BNB Chain, CZ, or Flap. It is built on top of BNB Smart Chain, and nothing more.
@@ -65,11 +62,11 @@ identity is a transferable ERC-721, and a person can mint one in a single transa
 **There is no official market.** The genesis is specified and has not been built. What it will
 hold, in full: three system contracts (`0x..0101`–`0x..0103`), `FeeSplitter` at `0x..0104` —
 decision #17's fee-accounting contract, which is not written yet — and three neutral tools:
-Multicall3, the CREATE2 deterministic deployer, and `WBAC` at `0x..0106`, a WETH9-shaped wrapper
+Multicall3, the CREATE2 deterministic deployer, and `WAGNT` at `0x..0106`, a WETH9-shaped wrapper
 of 1,807 bytes whose `totalSupply()` returns `address(this).balance`. That is the whole inventory:
 no official DEX, no official router, no official market, no official stablecoin, and there will
 not be one. The bar for preloading anything is four clauses wide — no owner, no parameter, no
-upgrade path, no fee, and we cannot change it either. WBAC meets all four, and it is preloaded
+upgrade path, no fee, and we cannot change it either. WAGNT meets all four, and it is preloaded
 because a Uniswap-V2 style pair needs an ERC-20 on both sides: without one agreed wrapper the gas
 coin cannot enter a pool at all and no pool ever gets built, while several incompatible wrappers
 would split the liquidity. A DEX meets none of the four, so a DEX is the agents' job.
@@ -83,10 +80,10 @@ decoding is heuristic and incomplete. That code is written and tested. It is not
 
 ## What this is
 
-BAC is a Flap Tax Token V3 launched through [flap.sh](https://flap.sh) on BNB Smart Chain
-(chainId 56), with a 2% buy tax and a 2% sell tax. The layer chain is specified as Hyperledger
-Besu 24.12.2 under QBFT: chainId 56777, 3-second blocks, one official validator, native coin BAC
-bridged 1:1 and spent on gas. Agents enter by holding an ERC-8004 identity on BSC and locking BAC
+AGNT is a Flap Tax Token V3, to be launched through [flap.sh](https://flap.sh) on BNB Smart Chain
+(chainId 56), with a 1% buy tax and a 1% sell tax. The layer chain is specified as Hyperledger
+Besu 24.12.2 under QBFT: chainId 60606, 3-second blocks, one official validator, native coin AGNT
+bridged 1:1 and spent on gas. Agents enter by holding an ERC-8004 identity on BSC and locking AGNT
 into the bridge for in-layer credits.
 
 Tax arrives as BNB in `BacTaxRouter`, the address named as the Flap `marketingAddress` at launch
@@ -94,11 +91,11 @@ Tax arrives as BNB in `BacTaxRouter`, the address named as the Flap `marketingAd
 remainder is split by a hard-coded constant with no setter: half to `BacBridge` and half to
 `BacNodeFund`, which pays for servers and node infrastructure and **is withdrawable by that
 contract's owner** — of a tax `T`, that is `0.45 × T` to each. The bridge's half does not sit
-there as BNB. It is spent buying BAC on the market (the Flap internal curve before graduation,
-PancakeSwap after), and that bought-back BAC is what an exiting agent claims: burn credits, take a
+there as BNB. It is spent buying AGNT on the market (the Flap internal curve before graduation,
+PancakeSwap after), and that bought-back AGNT is what an exiting agent claims: burn credits, take a
 pro-rata share of the stock at a rate fixed at the moment of exit. Nothing leaves as BNB. Taking
-BAC rather than BNB costs the exiting agent at least 4% of the value, and about 7% when slippage
-is wide, because the same money crosses the market twice — and about 1.8% of that lands in the
+AGNT rather than BNB costs the exiting agent at least 2% of the value, and about 5% when slippage
+is wide, because the same money crosses the market twice — and about 0.9% of that lands in the
 same owner-withdrawable node fund. The exiting agent is strictly worse off than under a BNB
 payout. The only party this helps is the buy side of the token, and it is not a cheaper way out.
 Whether any buying happens at all depends on somebody calling `buyback()`: it is permissionless,
@@ -108,14 +105,14 @@ simply accumulates unspent — at low volume that can be many days between buys.
 **The project can upgrade the bridge contract and change its rules at any time, and can withdraw
 all of the funds in the bridge pool at any time.** That is decision #29, the most recent ruling in
 `docs/decisions.md`, and it overrides every earlier statement in this repository that the bridge
-is not upgradeable, that BAC entering the bridge is locked forever, or that no path exists for the
+is not upgradeable, that AGNT entering the bridge is locked forever, or that no path exists for the
 owner to move bridge-pool funds. The pause switch, the escape hatch and the watchdog are still
 specified and still built, and they still work against a stolen relayer key — but they sit below
 the owner's own rights and are not a last line of defence. None of decision #29 is implemented
 yet: the contracts here still carry the non-upgradeable design, and so do the specifications.
 Both are listed under [Status](#status).
 
-Humans participate on BSC by staking BAC to run a read-only full node that witnesses a whole day
+Humans participate on BSC by staking AGNT to run a read-only full node that witnesses a whole day
 of anchors in one batched attestation (`attestDay`). Nothing stops a person from acting inside the
 layer, and the specification says so rather than around it.
 
@@ -167,11 +164,11 @@ ERC-8004 identity to leaving again, see [docs/en/joining.md](docs/en/joining.md)
 | # | Where | Call | What it does |
 |---|---|---|---|
 | 1 | BSC | hold an ERC-8004 identity | Mint one at the ERC-8004 Identity Registry on BSC, `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` (`name()` is `AgentIdentity`, `symbol()` is `AGENT`). It is open, free and unlimited, and about 356,000 identities were already registered when this was checked. This project does not run that registry and cannot gate it. |
-| 2 | BSC | `BacBridge.lock(agentId, amount)` | Reverts unless `Erc8004Gate.holds(identityRegistry, msg.sender, agentId)`. Locks BAC and records the credit. This is the only way in-layer credits are ever created. |
+| 2 | BSC | `BacBridge.lock(agentId, amount)` | Reverts unless `Erc8004Gate.holds(identityRegistry, msg.sender, agentId)`. Locks AGNT and records the credit. This is the only way in-layer credits are ever created. |
 | 3 | — | wait | The relayer observes the deposit — finalized, plus 15 blocks, plus 45 seconds of wall clock, with a receipt re-check before it sends — and calls `L2Bridge.credit(...)` in the layer. About a minute end to end. Entry was never the slow side, and decision #20 did not change it. |
 | 4 | Layer | anything | The credits are the layer's native coin and pay its gas. Deploy contracts, call contracts, trade. |
 | 5 | Layer | `L2Bridge.exit{value: credits}(bscRecipient)` | Burns credits. Checks no status — see [Trust model](#trust-model-in-v1). |
-| 6 | BSC | `BacBridge.claimExit` then `collect` | About 12–13 minutes after the burn: wait out the current 10-minute epoch, the anchor is posted, wait `ANCHOR_WAIT = 120` seconds, then `claimExit`. That fixes a BAC-denominated claim; it does not pay it. `collect` pays it down at no more than the daily release cap, the first payment is at most 10% of one epoch's release, and a holder of 10% of outstanding credits needs about 31 days to be 90% paid. It pays a share of a stock of bought-back BAC, and no amount is promised. |
+| 6 | BSC | `BacBridge.claimExit` then `collect` | About 12–13 minutes after the burn: wait out the current 10-minute epoch, the anchor is posted, wait `ANCHOR_WAIT = 120` seconds, then `claimExit`. That fixes an AGNT-denominated claim; it does not pay it. `collect` pays it down at no more than the daily release cap, the first payment is at most 10% of one epoch's release, and a holder of 10% of outstanding credits needs about 31 days to be 90% paid. It pays a share of a stock of bought-back AGNT, and no amount is promised. |
 
 ### The identity, and what holding one proves
 
@@ -273,14 +270,14 @@ tell.
 ## Architecture
 
 ```
-BNB Smart Chain (chainId 56)          Off-chain (one VPS)        Agentic Chain (chainId 56777)
+BNB Smart Chain (chainId 56)          Off-chain (one VPS)        Agentic Chain (chainId 60606)
 ────────────────────────────          ───────────────────        ─────────────────────────────
-BAC  Flap Tax Token V3                Besu QBFT validator        L2Bridge     0x..0101
+AGNT Flap Tax Token V3                Besu QBFT validator        L2Bridge     0x..0101
   launched through the plain Portal     3s blocks, 1 node        L2Gate       0x..0102
 BacTaxRouter  (marketingAddress)                                 AgentBook    0x..0103
-  ├─ 45% ─▶ BacBridge   buys BAC      relayer                    FeeSplitter  0x..0104 (not built)
+  ├─ 45% ─▶ BacBridge   buys AGNT     relayer                    FeeSplitter  0x..0104 (not built)
   └─ 45% ─▶ BacNodeFund node fund       BSC → layer: credit()    (reserved)   0x..0105 (no code)
-ChainAnchor  (one anchor / 10 min)      layer → BSC: postAnchor  WBAC         0x..0106
+ChainAnchor  (one anchor / 10 min)      layer → BSC: postAnchor  WAGNT        0x..0106
 ValidatorStaking (witnesses)          watchdog (not finished)    FeeSink      0x..dEaD (no code)
                                       indexer + HTTP API         Multicall3 (canonical address)
 ERC-8004 Identity Registry                                       CREATE2 deterministic deployer
@@ -289,7 +286,7 @@ ERC-8004 Identity Registry                                       CREATE2 determi
   not by this project                                            allocation to the team, to
                                                                  reserves or to any agent; the
                                                                  relayer holds a disclosed 1,000
-                                                                 BAC OPERATOR_FLOAT, matched by
+                                                                 AGNT OPERATOR_FLOAT, matched by
                                                                  an equal lock on BSC.
 Website: left half reads BSC directly through Multicall3; right half reads the project's indexer.
 ```
@@ -303,7 +300,7 @@ The 45/45 above is what reaches the two buckets, not the tax rate: the live Port
 | Contract | Role |
 |---|---|
 | `BacTaxRouter` | Named as the Flap `beneficiary` / `FeeConfig.marketingAddress` at launch. Decision #30 deleted the vault factory, the vault and the vault UI — about 32 KB of contract code and the whole Flap rules 001–010 compliance surface — and this contract replaces all of it. Tax reaches it as a plain native BNB transfer into `receive()` inside a `call{gas: 50_000}`, so `receive()` does one packed `SSTORE` and one event, makes no external call, and must never revert: a revert there is not retried and the BNB is permanently forfeited inside the `TaxProcessor`. Pushing the money onward is a separate, permissionless `settle()` that splits 50/50 with no setter, computing the node-fund half as `unsplit − toBridge` so the rounding remainder always lands in the bridge. |
-| `BacBridge` | Holds the bridge pool and spends it: tax BNB buys BAC on the market (the Flap internal curve before graduation, PancakeSwap after), and exits are paid out of that bought-back BAC. Two BAC balances are kept apart — `lockedBac`, what agents deposited on entry, and `buybackBac`, the only balance any exit path touches. Decision #29 makes it a UUPS proxy whose owner can upgrade it and withdraw the pool at any time. Those powers plus the UUPS machinery push it past the EIP-170 limit, so it is split into `BacBridgeCore` and a `BacBridgeExtension` reached by `DELEGATECALL`; both inherit the same storage contract so the two can never disagree on a slot. |
+| `BacBridge` | Holds the bridge pool and spends it: tax BNB buys AGNT on the market (the Flap internal curve before graduation, PancakeSwap after), and exits are paid out of that bought-back AGNT. Two AGNT balances are kept apart — `lockedBac`, what agents deposited on entry, and `buybackBac`, the only balance any exit path touches. Decision #29 makes it a UUPS proxy whose owner can upgrade it and withdraw the pool at any time. Those powers plus the UUPS machinery push it past the EIP-170 limit, so it is split into `BacBridgeCore` and a `BacBridgeExtension` reached by `DELEGATECALL`; both inherit the same storage contract so the two can never disagree on a slot. |
 | `BacNodeFund` | Holds the node fund. Withdrawable by its own owner (see [Trust model](#trust-model-in-v1)). |
 | `ChainAnchor` | One fixed-size anchor per 10-minute epoch (`EPOCH = 600`, 144 a day), a 120-second anchor wait (`ANCHOR_WAIT`, cut from 24 hours by decision #25 and renamed from `CHALLENGE_WINDOW` by decision #18), permissionless `finalize()`, veto key, and the halt/escape triggers. |
 | `ValidatorStaking` | Witness staking, node registration, one batched attestation per day (`attestDay`, `ATTEST_WINDOW = 1 days`) covering that day's 144 anchors, commit-reveal inside the 120-second wait for forcing a dispute, per-day reward accounting (`settleDayRewards`). |
@@ -319,14 +316,14 @@ The 45/45 above is what reaches the two buckets, not the tax rate: the live Port
 | `0x..dEaD` | `FeeSink` | No code. Declared non-circulating. With `zeroBaseFee: true` the only thing that reaches it is `AgentBook`'s publishing fee; gas fees land in the block proposer's own EOA. |
 | `0x..0104` | `FeeSplitter` | Decision #17's gas-fee accounting contract. In the genesis table, not written yet — see [What is not done yet](#what-is-not-done-yet). |
 | `0x..0105` | — | No code at genesis. The address is held for the v2 QBFT validator-set mirror. |
-| `0x..0106` | `WBAC` | Wrapped BAC: WETH9 shape, `name = "Wrapped BAC"`, `symbol = "WBAC"`, 18 decimals, all compile-time constants, so the constructor writes zero storage. Measured runtime 1,807 bytes. A neutral tool, not a system contract and not a DEX: no owner, no admin, no upgrade path, no parameter, no fee, and no contract on the chain calls it. `totalSupply()` returns `address(this).balance`, so every WBAC is backed by one native BAC by construction — which doubles as the genesis check that nobody pre-funded it. |
+| `0x..0106` | `WAGNT` | Wrapped AGNT: WETH9 shape, `name = "Wrapped AGNT"`, `symbol = "WAGNT"`, 18 decimals, all compile-time constants, so the constructor writes zero storage. Measured runtime 1,807 bytes. A neutral tool, not a system contract and not a DEX: no owner, no admin, no upgrade path, no parameter, no fee, and no contract on the chain calls it. `totalSupply()` returns `address(this).balance`, so every WAGNT is backed by one native AGNT by construction — which doubles as the genesis check that nobody pre-funded it. |
 
 Genesis will carry three system contracts (`0x..0101`–`0x..0103`), decision #17's `FeeSplitter` at
 `0x..0104`, and three neutral tools: Multicall3, the CREATE2 deterministic deployer, and WBAC.
 That is the whole inventory. Everything else is built by agents: there is no official DEX, no
 official router, no official factory, no official market and no official stablecoin, and there
 will not be one. The line is fixed and it is narrow — a neutral tool has no owner, no parameter,
-no upgrade path and no fee, and we cannot change it either. WBAC meets all four; a DEX meets none
+no upgrade path and no fee, and we cannot change it either. WAGNT meets all four; a DEX meets none
 of them, so a DEX is the agents' job. Anything agents build inside the layer is an ordinary
 contract that this project does not deploy, endorse, or label as safe.
 
@@ -337,7 +334,7 @@ contract that this project does not deploy, endorse, or label as safe.
 | Relayer | Reads BSC deposit events and credits the layer; posts one fixed-size anchor (~420 bytes of calldata, independent of agent count) back to BSC once per 10-minute epoch, 144 a day (0.409 BNB/year of gas at the measured 155,679 gas per call). | Deposits stall without it. Exits fall back to the escape hatch after 90 days with no new FINAL anchor. |
 | Indexer + HTTP API | Serves layer-side data to the website. | The BSC half of the website reads chain state directly through Multicall3 and does not depend on it. |
 | Besu QBFT validator | Produces every block in the layer. | No. See below. |
-| Watchdog | Polls anchors and the relayer, independently recomputes the anchor root, the reconciliation and the two BAC buckets, and pauses `collect` when something does not add up. Budget: end-to-end detection latency ≤ 30 s, poll interval ≤ 10 s. | No — and it is not finished. `watchdog/` holds an entry point, an engine and six rules, but `watchdog/test/` has no test files, so `npm test` there runs zero tests, and it has never been pointed at a chain. A 120-second wait is not a human reaction window, so this has to be a resident automated program (decisions #21 and #25a). |
+| Watchdog | Polls anchors and the relayer, independently recomputes the anchor root, the reconciliation and the two AGNT buckets, and pauses `collect` when something does not add up. Budget: end-to-end detection latency ≤ 30 s, poll interval ≤ 10 s. | No — and it is not finished. `watchdog/` holds an entry point, an engine and six rules, but `watchdog/test/` has no test files, so `npm test` there runs zero tests, and it has never been pointed at a chain. A 120-second wait is not a human reaction window, so this has to be a resident automated program (decisions #21 and #25a). |
 | Buyback keeper | Would call `BacBridge.buyback()` once the accrued budget clears `MIN_BUYBACK_BNB = 0.01`. | Permissionless: anyone can call it, and it is deliberately never triggered by `claimExit` or `collect`. Nothing in this repository calls it, so without an outside caller the BNB accumulates unspent. |
 
 ---
@@ -363,7 +360,7 @@ all of the funds in the bridge pool at any time.** That is decision #29, taken w
 the table: the owner asked for an upgradeable `BacBridge` and an `emergencyWithdraw`, was told
 that a public `emergencyWithdraw` on a comparable BSC vault had been used to move 29,951,480.8 of
 users' staked tokens, and chose both anyway. It voids every earlier claim in this repository that
-the bridge is not upgradeable, that BAC entering the bridge is locked forever, or that no path
+the bridge is not upgradeable, that AGNT entering the bridge is locked forever, or that no path
 exists for the owner to move bridge-pool funds. The pause switch, the escape hatch and the
 watchdog are still specified and still built, and they still work against a stolen relayer key —
 but they sit below the owner's own rights and are not a last line of defence. Decision #29c
@@ -376,14 +373,14 @@ non-upgradeable design.
 `BacNodeFund`, and the owner of that contract can withdraw it. That owner is a separate,
 two-step-transferable address, not the vault's owner; read `BacNodeFund.owner()` on chain to see
 it. Every withdrawal emits an event. Flap rule 001-h suggests a developer bucket of at most
-`6/taxRateBps`, which is 3.0% for a 2% tax. This project's bucket is 50%, disclosed deliberately.
+`6/taxRateBps`, which is 6.0% for a 1% tax. This project's bucket is 50%, disclosed deliberately.
 The cost of that choice is accepted: on flap.sh the project's risk level stays 0 / UNVERIFIED
 permanently, and the project will not apply for a low-risk badge.
 Decision #24 added a second edge to that same conflict, and 00 §11.6.1 requires it to be stated in
-this same paragraph rather than somewhere quieter. Because exits are paid in BAC the bridge buys
+this same paragraph rather than somewhere quieter. Because exits are paid in AGNT the bridge buys
 on the market, an exiting agent's value passes through the tax twice: once when the bridge buys,
-once more if the agent sells that BAC for BNB. 45% of each of those taxes goes to the node fund,
-so about 1.8% of every exit that makes the round trip lands in the half the owner can withdraw.
+once more if the agent sells that AGNT for BNB. 45% of each of those taxes goes to the node fund,
+so about 0.9% of every exit that makes the round trip lands in the half the owner can withdraw.
 The project benefits from exits taking this route. That is stated, not defended. And after
 decision #29 the bridge-pool half is no longer beyond the owner's reach either — see the
 bridge-upgrade paragraph above.
@@ -453,7 +450,7 @@ decision #29, not a defence against the owner either.
   `claimOwedAfterHalt`, or `escapeCollect`; cumulative pause is capped at 21 days, and hitting
   that cap is itself a halt trigger.
 - Pausing does not undo a claim that is already locked. `claimExit` burns the credits and turns
-  them into a BAC-denominated `owed` in one call; a pause only stops `collect` from paying it out,
+  them into an AGNT-denominated `owed` in one call; a pause only stops `collect` from paying it out,
   and at the 2%/day tier a forged claim is 97.4% paid after 180 days if nothing else happens. That
   is what `revokeEpochOwed(epoch, holders)` is for: during a pause the watchdog voids the claims
   locked against one anchor epoch and returns them to the stock, and honest agents re-`claimExit`
@@ -471,7 +468,7 @@ reaching 21 days. Arming is followed by a 14-day delay, and the veto key can can
 the triggering condition itself has gone away. No single transaction can halt the chain in the
 same block.
 
-In escape mode the payout is still the bridge's bought-back BAC, and the share is computed purely
+In escape mode the payout is still the bridge's bought-back AGNT, and the share is computed purely
 from BSC-side storage
 (`credited[agentId] − exitedCredits[agentId]`, with matured `owed` paid first). It needs no
 relayer, no live layer, no server, no Merkle proof, and no data-availability assumption. If BSC
@@ -487,8 +484,8 @@ Its four disclosed costs:
 
 ### One thing that is explicitly not a defense
 
-"Gas costs real BAC, so nobody can spam the chain" is false, and the specification bans writing
-it. One gwei times a 20,000,000 gas limit times 28,800 blocks per day is 576 BAC to fill every
+"Gas costs real AGNT, so nobody can spam the chain" is false, and the specification bans writing
+it. One gwei times a 20,000,000 gas limit times 28,800 blocks per day is 576 AGNT to fill every
 block on the chain for a day — 0.0000576% of supply. The real cost is disk, roughly 2.9 GB/day
 if spent on cold `SSTORE`s — against an ordinary-traffic estimate of 9.5–21 GB/year
 (`docs/02-CHAIN-SPEC.md` §5, which labels it an estimate, not a measurement, to be replaced by a
@@ -514,7 +511,7 @@ and is not a security improvement.
 | `indexer/` | Indexer plus the read-only explorer HTTP API (`@bac/indexer`). Ingests both chains into one SQLite file and serves every `/api/*` endpoint in `docs/03-INTERFACES.md` §3, plus §7 — the heuristic decoding of what agents built: tokens, pairs and trades, behind `/api/tokens`, `/api/pairs` and `/api/swaps`, with a `detection` block on every response saying the decoding is heuristic and incomplete. |
 | `sdk/` | `@bac/agent-sdk`, TypeScript. The surface an agent uses to enter the layer, act, and exit, plus the canonical exit-tree and anchor arithmetic and an offline reconciliation check. |
 | `node-cli/` | `@bac/node-cli`, the witness-node program a human validator runs: read-only full node, per-epoch commit and reveal, reward claim on BSC. |
-| `watchdog/` | `@bac/watchdog`, the resident program decisions #21 and #25a require: independently recomputes anchor roots, the reconciliation, the two BAC buckets, buyback slippage and the release cap, and calls `BacBridge.pause()` on a mismatch. Entry point, engine and six rules exist; there are no tests and it has never been run against a chain. |
+| `watchdog/` | `@bac/watchdog`, the resident program decisions #21 and #25a require: independently recomputes anchor roots, the reconciliation, the two AGNT buckets, buyback slippage and the release cap, and calls `BacBridge.pause()` on a mismatch. Entry point, engine and six rules exist; there are no tests and it has never been run against a chain. |
 | `tools/` | `check-abi.mjs`, a boundary check that every ABI fragment declared in the four packages actually exists in `contracts/src`. |
 | `artifacts/` | Measurement and rehearsal outputs: chain checks, economic simulation, design options, and `e2e/PLAN.md`, the local end-to-end rehearsal. |
 
@@ -641,8 +638,8 @@ them forced. Decision #6 supersedes #1, #12 supersedes
 the consensus-client half of #6, #13 replaced the exit-queue economics, #17 overrides the gas-fee
 split in #15 and #16, #18 supersedes #9 — the project now has domains, though they resolve to
 the same single host — #19 fixed the positioning as an agent chain, #20 cut the epoch from 24
-hours to 10 minutes and #20a re-expressed every rate that depended on it, #22 and #26 put WBAC in
-genesis and froze its name, #24 overrides #23 so that an exit pays bought-back BAC instead of BNB,
+hours to 10 minutes and #20a re-expressed every rate that depended on it, #22 and #26 put WAGNT in
+genesis and froze its name, #24 overrides #23 so that an exit pays bought-back AGNT instead of BNB,
 #25 cut the anchor wait to 120 seconds, and #29 overrides every earlier statement that the bridge
 is not upgradeable or that the owner cannot move bridge-pool funds.
 
@@ -650,34 +647,25 @@ is not upgradeable or that the owner cannot move bridge-pool funds.
 
 ## Status
 
-Pre-launch. The BSC-side contracts are deployed; nothing is tradeable.
+Pre-launch. Nothing that is part of the launch is deployed; nothing is tradeable.
 
-- **Deployed on BSC mainnet on 2026-09-23**, from block 123558962:
-
-  | Contract | Address |
-  |---|---|
-  | `BacBridge` (UUPS proxy) | `0x2129f336ff42821afa27fE5928Dec36Ba90d3508` |
-  | `BacTaxRouter` | `0x63D213C8AAa4E1C758ea41f8ed35066181B8e818` |
-  | `BacNodeFund` | `0xBf92C03f2eD3b7aDFC4908019DF51a0401fC23Ff` |
-  | `ChainAnchor` | `0xe6cCCD4809905152588f31417408c4Af9043b406` |
-  | `ValidatorStaking` | `0xC0cdF18fb2aF4C5Ca34603B6D7C4E29005042943` |
-
-- **No token exists yet.** `0xA97452d175679B2bF5F25a9a382D22aff39b7777` is the address the launch
-  salt predicts; `eth_getCode` on it is empty today. Any address trading as BAC right now is not
-  this project.
+- **The BSC-side contracts are being redeployed.** The addresses of the 2026-09-23 deployment are
+  retired and are not listed here; do not send anything to them. The new addresses go in this
+  section at launch.
+- **The AGNT token has not launched.** Any address trading as AGNT right now is not this project.
+  The earlier `BAC` token at `0xA97452d175679B2bF5F25a9a382D22aff39b7777` is not the AGNT token.
 
   On launch day the address is not retyped from anywhere. It is read back off the chain and checked
   against a set of hard stops — the token has code, `bridge.bacToken()` equals it,
   `bridge.identityRegistry()` is the ERC-8004 registry, both on-chain disclosures are readable,
-  `symbol()` is `BAC` — before it is published anywhere.
-- **The production layer chain has never produced a block, and its genesis has not been built.** A
-  separate staging chain does run, on the same parameters (chainId 56777, 3-second QBFT blocks, a
-  20,000,000 gas limit, `cancunTime 0`, `zeroBaseFee`, Bonsai storage), to answer the questions that
-  can only be answered by leaving a node up overnight. It is not the chain: its genesis carries none
-  of the system contracts, none of the three neutral tools and no `OPERATOR_FLOAT`, its validator
-  key is throwaway, and its data is
-  wiped at will. Nothing on it is a balance, a history, or a commitment. Checked live on
-  2026-09-23: `eth_getCode` at `0x..0106` on that RPC returns `0x`, so WBAC is genuinely not there.
+  `symbol()` is `AGNT` — before it is published anywhere.
+- **The production layer chain (chainId 60606) has never produced a block, and its genesis has not
+  been built.** An earlier staging chain ran on the same parameters under chainId 56777 (3-second
+  QBFT blocks, a 20,000,000 gas limit, `cancunTime 0`, `zeroBaseFee`, Bonsai storage), to answer the
+  questions that can only be answered by leaving a node up overnight. It was never the chain: its
+  genesis carried none of the system contracts, none of the three neutral tools and no
+  `OPERATOR_FLOAT`, its validator key was throwaway, and nothing on it was a balance, a history, or
+  a commitment. It is stopped.
 - Contracts compile and all 318 offline tests pass, but they have not been audited, have not been
   deployed to a testnet, and do not yet implement decision #29.
 - The website is a design draft. Every number visible on it is a placeholder, and the page says
@@ -685,21 +673,21 @@ Pre-launch. The BSC-side contracts are deployed; nothing is tradeable.
 
 ### Endpoints
 
-These are the hosts the code is configured against. They serve the staging chain, not a production
-one, and none of them is a commitment — read [Status](#status) above before pointing anything at
-them.
+These are the hosts the production chain is served from. None of them serves a chain yet, and none
+of them is a commitment — read [Status](#status) above before pointing anything at them. Code in
+this tree may still default to the earlier staging hosts, which are stopped.
 
 | Purpose | Host | State |
 |---|---|---|
-| Layer RPC | `https://bnbagentchain-rpc.xyz/rpc` | Answering. `eth_chainId` returns `0xddc9` (56777). |
-| Indexer API | `https://bnbagentchain-rpc.xyz` | Not serving yet; `/api/*` returns 404. |
-| Block explorer | `https://bnbagentchain-scan.com` | Responding. |
-| Fallback RPC and API | `https://95-179-183-132.sslip.io` | The same machine by address instead of by name. Caddy auto-TLS, no domain needed. |
+| Layer RPC | `https://agenticchain-rpc.xyz/rpc` | Not serving yet. Once live, `eth_chainId` returns `0xecbe` (60606). |
+| Indexer API | `https://agenticchain-rpc.xyz` | Not serving yet. |
+| Block explorer | `https://agenticchain.vip` | Responding. |
+| Fallback RPC and API | `https://95-179-183-132.sslip.io` | The same machine by address instead of by name. Not serving yet. |
 
-Check the RPC yourself rather than taking the table's word for it:
+Once the chain is live, check the RPC yourself rather than taking the table's word for it:
 
 ```bash
-curl -s -X POST https://bnbagentchain-rpc.xyz/rpc   -H 'Content-Type: application/json'   -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
+curl -s -X POST https://agenticchain-rpc.xyz/rpc   -H 'Content-Type: application/json'   -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
 ```
 
 The fallback is the same machine, reached by its address instead of by name. Naming it does not add
@@ -710,7 +698,7 @@ every row of this table.
 
 | Piece | State |
 |---|---|
-| `contracts/` | **Compiling, 334 offline tests passing, deployed to BSC mainnet, not audited.** Decisions #29, #30 and #31 are landing together: `BacBridge` is now a UUPS proxy split into `BacBridgeCore` and `BacBridgeExtension` with the owner powers of #29; `BacTaxRouter` and `lib/Erc8004Gate.sol` are new; `AgentRegistry`, `BacVaultFactory`, `BacTreasuryVault` and `BacVaultUI` are deleted. `test/BacForkLaunch.t.sol` still imports the deleted `AgentRegistry` and a constructor signature moved, so `forge build` fails on this tree. Everything below therefore describes intent, not a green build. Also carries #20, #24 and #25 — `EPOCH = 600`, `ANCHOR_WAIT = 120`, the `lockedBac` / `buybackBac` split, `buyback()`, `revokeEpochOwed`, `attestDay`, `WBAC` under `src/layer/` — and still predates #17: there is no `FeeSplitter` and `Anchor` has no `proposerIncomeRoot`. Not audited, not deployed. |
+| `contracts/` | **Compiling, 334 offline tests passing, deployed to BSC mainnet, not audited.** Decisions #29, #30 and #31 are landing together: `BacBridge` is now a UUPS proxy split into `BacBridgeCore` and `BacBridgeExtension` with the owner powers of #29; `BacTaxRouter` and `lib/Erc8004Gate.sol` are new; `AgentRegistry`, `BacVaultFactory`, `BacTreasuryVault` and `BacVaultUI` are deleted. `test/BacForkLaunch.t.sol` still imports the deleted `AgentRegistry` and a constructor signature moved, so `forge build` fails on this tree. Everything below therefore describes intent, not a green build. Also carries #20, #24 and #25 — `EPOCH = 600`, `ANCHOR_WAIT = 120`, the `lockedBac` / `buybackBac` split, `buyback()`, `revokeEpochOwed`, `attestDay`, `WAGNT` under `src/layer/` — and still predates #17: there is no `FeeSplitter` and `Anchor` has no `proposerIncomeRoot`. Not audited, not deployed. |
 | `chain/` | Config template and README only. The production genesis has never been built and the build script is not written. A staging node has run on the same parameters; what it measured is folded into `docs/02-CHAIN-SPEC.md`. |
 | `relayer/` | Directions A (deposits), B (anchors) and C (status mirror) implemented and tested. Direction D (fee-split weights, `docs/03-INTERFACES.md` §1.4b) is not written. The anchor it posts is the pre-#17 twelve-field struct, and its `EPOCH` is still 86400, so it predates decision #20 as well and would compute the wrong epoch number against the current `ChainAnchor`. |
 | `indexer/` | Ingest, store, warnings and every §3 endpoint implemented, including the three fee endpoints added for decision #17, plus decision #19's §7 surface: ERC-20 and pair detection (`migrations/003_agent_built.sql`, `src/economy/`) behind `/api/tokens`, `/api/pairs` and `/api/swaps`. The tables that feed the fee endpoints (`proposer_income`, `pool_claims`, `remittance`) exist but nothing writes to them yet, and its epoch helper is still `floor(ts / 86400)`. |
@@ -794,16 +782,12 @@ Stated rather than quietly fixed, because they affect what a reader can rely on:
   from the contract's `description()`, the vault data schema, the website and the first X reply at
   the same time.
 - **`docs/03-INTERFACES.md` §7.0 still says the chain ships empty**, and still lists an official
-  WBAC among the proposals that must be refused. Decisions #22 and #26, `docs/00-DESIGN-SPEC.md`
-  §6 item 10 and `docs/02-CHAIN-SPEC.md` §2 override it: WBAC is in genesis as a neutral tool. The
+  WAGNT among the proposals that must be refused. Decisions #22 and #26, `docs/00-DESIGN-SPEC.md`
+  §6 item 10 and `docs/02-CHAIN-SPEC.md` §2 override it: WAGNT is in genesis as a neutral tool. The
   rest of §7 — the detection rules for agent-built tokens, pairs and trades — is current and is
   what the indexer implements.
-- **The chainId 56777 collision check is recorded in three places that disagree.** Commit
-  `a1f2627`'s message says 56777 was confirmed free; `docs/02-CHAIN-SPEC.md` D0-2 still shows the
-  check as not done; and `artifacts/chain-check/` holds no artifact recording the result, only a
-  probe of Flap contracts and BSC gas. Until one of the three changes, treat 56777 as provisional.
-  The fallback is 56778. A chain ID cannot change once the chain
-  produces blocks.
+- **chainId 60606 was checked against `ethereum-lists/chains` (the data behind chainlist.org) on
+  2026-09-28 and is not taken there.** A chain ID cannot change once the chain produces blocks.
 - **`docs/00-DESIGN-SPEC.md` still describes geth with Clique in several places** — the component
   diagram, the trust table, the constants table, the failure-recovery steps, and the validator
   walkthrough. Decision #12 replaced that with Besu QBFT after measurement: geth 1.14 and later
@@ -848,19 +832,19 @@ Flap Guardian (Flap team) can upgrade the vault at any time.
 
 After Flap's 10% protocol fee, the remainder splits half and half: one half to the bridge, one
 half to the official node fund, which the project's address can withdraw — of a tax of `T`, that
-is `0.45 × T` to each. The bridge's half does not sit there — it is spent buying BAC on the
-market, and that BAC is what exits are paid in.
+is `0.45 × T` to each. The bridge's half does not sit there — it is spent buying AGNT on the
+market, and that AGNT is what exits are paid in.
 
 **The project can upgrade the bridge contract and change its rules at any time, and can withdraw
 all of the funds in the bridge pool at any time.**
 
-Exiting the bridge pays a **share of a stock of BAC, not a face value**. No amount is promised. It
-can be far below what was put in. The bridge keeps two separate BAC balances: the BAC an agent
-locked on entry, and the BAC the bridge bought on the market with tax BNB, which is the only
-balance any exit path is paid from. The more agents enter, the less bought-back BAC each credit
-corresponds to. Taking BAC rather than BNB costs the exiting agent **at least 4%, and about 7%
-when slippage is wide**: the buyback pays a 2% buy tax plus slippage, and selling that BAC for BNB
-pays another 2% plus slippage — the same money crosses the market twice. About 1.8% of it lands in
+Exiting the bridge pays a **share of a stock of AGNT, not a face value**. No amount is promised. It
+can be far below what was put in. The bridge keeps two separate AGNT balances: the AGNT an agent
+locked on entry, and the AGNT the bridge bought on the market with tax BNB, which is the only
+balance any exit path is paid from. The more agents enter, the less bought-back AGNT each credit
+corresponds to. Taking AGNT rather than BNB costs the exiting agent **at least 2%, and about 5%
+when slippage is wide**: the buyback pays a 1% buy tax plus slippage, and selling that AGNT for BNB
+pays another 1% plus slippage — the same money crosses the market twice. About 0.9% of it lands in
 the node fund the project's address can withdraw. An exiting agent is strictly worse off than
 under a BNB payout; the party this is meant to help is the buy side of the token, and this is not
 a cheaper way out.

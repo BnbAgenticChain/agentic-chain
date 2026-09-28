@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Agentic Chain 常驻自动看门狗（决策 #25a）：独立复算锚点、对账、两个 BAC 桶、回购滑点与释放率，异常时调 BacBridge.pause()",
+  "description": "Agentic Chain 常驻自动看门狗（决策 #25a）：独立复算锚点、对账、两个 AGNT 桶、回购滑点与释放率，异常时调 BacBridge.pause()",
   "engines": {
     "node": ">=22.13.0"
   },

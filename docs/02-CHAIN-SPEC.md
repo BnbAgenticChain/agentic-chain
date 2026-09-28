@@ -6,7 +6,7 @@
 > **2026-09-22 全文改写：共识客户端从 geth Clique 换成 Hyperledger Besu 24.12.2 + QBFT。**
 > 依据是实测，不是偏好：geth ≥ 1.14 已彻底移除 Clique，唯一还能跑 Clique 的 v1.13.15 已 EOL，且一开 `cancunTime` 就 panic。
 > 实测表与复现命令见 `docs/research/10-consensus-client.md`，决策见 `docs/decisions.md` #12，本文 §11 是不许重开的那一页。
-> 链参数（chainId 56777、3 秒块、gasLimit 20,000,000、三个创世系统合约、`OPERATOR_FLOAT`、端口、备份、见证人流程）**实质全部不变**，变的是共识段、创世生成方式、启动参数、以及「层内不会重组」带来的简化。
+> 链参数（chainId 60606、3 秒块、gasLimit 20,000,000、三个创世系统合约、`OPERATOR_FLOAT`、端口、备份、见证人流程）**实质全部不变**，变的是共识段、创世生成方式、启动参数、以及「层内不会重组」带来的简化。
 
 ---
 
@@ -15,7 +15,7 @@
 | # | 事项 | 怎么做 | 状态 / 失败怎么办 |
 |---|---|---|---|
 | D0-1 | **确认 Besu QBFT 能出块，且 `cancunTime: 0` 下正常** | 一次性容器 + 临时创世，见 §5.1 `probe-consensus.sh` | ✅ **DONE 2026-09-22**：`hyperledger/besu:24.12.2`，QBFT `blockperiodseconds=2`，**45 秒出 21 块**，**RSS 309 MiB**，**空转 CPU 7.4%**，创世带 `cancunTime: 0` 正常。同一台机器上 geth 的五种组合全部失败（§11 表）。此项不再重测 |
-| D0-2 | **确认 `chainId = 56777` 没被占用** | 在 chainlist.org 与 github.com/ethereum-lists/chains 逐字搜 `56777`；同时搜 `56778` 作为备选 | ⬜ **未做**。被占则退 `56778`，并向 `ethereum-lists/chains` 提登记 PR。**链 ID 一旦出块就不能改**（改了等于另一条链），这一步不能省 |
+| D0-2 | **确认 `chainId = 60606` 没被占用** | 在 `ethereum-lists/chains`（chainlist.org 的数据源）里查 `60606` | ✅ **DONE 2026-09-28**：2,772 条链里没有 60606 |
 | D0-3 | **确认 BSC 的块时间与 gas price** | `artifacts/chain-check/probe.sh` | ✅ **DONE 2026-09-22**：块时间 0.45 s、gas price 0.05 gwei。若块时间变了，`AgentRegistry` 的 `K_BLOCKS/K_SECONDS`、EIP-2935 窗口、纪元长度、feed 的时间估算要一起重算 |
 | D0-4 | **选定存储格式并确认它能起来**（原 `--gcmode/--state.scheme` 条目的对应项） | 用同一个一次性容器分别以 `--data-storage-format=BONSAI` 和 `FOREST` 启动一次，各跑 200 块，`du -sh` 对比 | ⬜ **默认值已定为 `BONSAI`（理由见 §4.4），这一步只是把数字钉死。** Besu 24.12 的 Bonsai **没有 archive 模式**（与 geth pathdb 不支持 archive 是同一类约束），所以「对任意旧区块 `eth_call`」照旧**不在 `/rpc` 的承诺里** |
 | D0-5 | **JVM 堆的定值（8 GiB 的机器，上面还有别的负载）** | 起容器时 `BESU_OPTS=-Xmx2g -Xms512m`，跑满 30 分钟，`docker stats` 看 RSS，`jcmd GC.heap_info` 看堆占用；同时确认 compose 的 `mem_limit` 触发时是 JVM OOM 还是 cgroup OOM-kill | ⬜ **必做**。Besu 默认堆是「机器内存的一个百分比」，在一台还跑着别的负载的 8 GiB 机器上不能放任。基线：实测空转 RSS 309 MiB，`-Xmx2g` + `mem_limit: 3g` 有 6 倍余量。**失败（被 OOM-kill）就调到 `-Xmx3g` / `mem_limit: 4g` 并把旧项目的内存占用写进 runbook** |
@@ -33,7 +33,7 @@
 
 | 词 | 指什么 | 在哪 | v1 谁是 |
 |---|---|---|---|
-| **见证人**（产品层，文档里旧称「人类验证者」） | 在 BSC 上质押 2,000,000 BAC、跑只读全节点、对每个纪元做 commit-reveal 见证、领节点基金奖励的人 | 身份与钱都在 **BSC** 上（`ValidatorStaking`） | 任何质押的人，**不出块** |
+| **见证人**（产品层，文档里旧称「人类验证者」） | 在 BSC 上质押 2,000,000 AGNT、跑只读全节点、对每个纪元做 commit-reveal 见证、领节点基金奖励的人 | 身份与钱都在 **BSC** 上（`ValidatorStaking`） | 任何质押的人，**不出块** |
 | **QBFT validator**（共识层） | 真正提案和投票产出层内区块的节点，地址由 node key 导出 | 在**层内**，集合由 QBFT 共识维护 | **1 个官方节点**（决策 #6） |
 
 **v1 两个集合完全不相交**，这是设计，不是遗漏：见证人的刹车在 BSC 上（异议 → `DISPUTED` → 不释放 BNB → 逃生），不在层内共识里。
@@ -47,8 +47,8 @@
 | 项 | 值 | 理由 |
 |---|---|---|
 | 链名 | Agentic Chain | 决策 #2（2026-09-28 改名）；**不是 Binance**，网站与 X 文案都带「与 Binance / BNB Chain / Flap 官方无关」 |
-| 原生币 | BAC（18 位小数） | 从 BSC 1:1 桥进来的积分就是原生币 |
-| `chainId` | **56777**（备选 56778） | 56 = 母链 BSC，777 对应 Flap 代币地址尾号 `…7777`；五位数、好记、避开 56/97/204/5611/1337/31337 |
+| 原生币 | AGNT（18 位小数） | 从 BSC 1:1 桥进来的积分就是原生币 |
+| `chainId` | **60606**（备选 56778） | 56 = 母链 BSC，777 对应 Flap 代币地址尾号 `…7777`；五位数、好记、避开 56/97/204/5611/1337/31337 |
 | 共识 | **QBFT（Hyperledger Besu 24.12.2）**，`blockperiodseconds = 3`，`epochlength = 30000`，`requesttimeoutseconds = 6` | 决策 #12。一个官方 validator。3 秒一块 = 28,800 块/天，浏览器的实时感够，磁盘可控。**QBFT 是 BFT 即时最终性：一个块被 commit 就不会回滚**（§6.2） |
 | 客户端 | `hyperledger/besu:24.12.2`（钉死 tag + 本地 `docker save` 留底） | D0-1 实测；geth 全线不可用（§11） |
 | 硬分叉 | 全部开到 **Cancun**（`shanghaiTime: 0`, `cancunTime: 0`） | agent 默认用 solc 0.8.26，目标就是 cancun，会发出 `MCOPY`/`PUSH0`；停在 shanghai 会让创世系统合约在本链上是非法指令，而创世不可改。**Clique 下这一条做不到（v1.13.15 一开 cancun 就 panic），Besu 下真的成立**（`00` §0.1 G5 现在是实的） |
@@ -57,8 +57,8 @@
 | `--min-gas-price` | **1 gwei（固定，可调）** | 关掉 basefee 之后就没了 EIP-1559 的自动涨价刹车，防刷链只剩三条：这个固定下限 + 20M 区块上限 + 磁盘告警（决策 #16，必须照实说）。**旧版的 `--min-gas-price=1000000000` 已作废**：zeroBaseFee 下它等于允许全免费刷链 |
 | `mixHash` | `0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365` | **QBFT/IBFT2 的固定魔数**（ASCII "ctical byzantine fault tolerance"）。不是随便填的 32 字节，填错 Besu 不认这条链 |
 | `difficulty` | `0x1` | BFT 链不用难度，固定 1 |
-| 总量 | 1,000,000,000 BAC = `1e27` wei（`0x33b2e3c9fd0803ce8000000`） | 等于 BAC 在 BSC 上的固定总量，是创世写死的积分上限 |
-| 给团队/预留/agent 的创世分配 | **0** | 除了中继的 1,000 BAC（公开披露、BSC 侧等额锁仓），没有任何账户有创世余额。创世里有代码的七个地址**余额全是 0**——四个系统合约里只有 `L2Bridge` 持币（那是积分总量本身，不是分配），三个中立工具一分钱都没有。这是产品的一部分 |
+| 总量 | 1,000,000,000 AGNT = `1e27` wei（`0x33b2e3c9fd0803ce8000000`） | 等于 AGNT 在 BSC 上的固定总量，是创世写死的积分上限 |
+| 给团队/预留/agent 的创世分配 | **0** | 除了中继的 1,000 AGNT（公开披露、BSC 侧等额锁仓），没有任何账户有创世余额。创世里有代码的七个地址**余额全是 0**——四个系统合约里只有 `L2Bridge` 持币（那是积分总量本身，不是分配），三个中立工具一分钱都没有。这是产品的一部分 |
 | RPC | `https://95-179-183-132.sslip.io/rpc`（Caddy 自动 TLS，方法白名单 + 限速 + CORS） | 决策 #9，没有域名 |
 | p2p | `30303/tcp` + `30303/udp` | 决策 #8 已授权 |
 
@@ -84,16 +84,16 @@
 | `0x000000000000000000000000000000000000dEaD` | FeeSink | 0 | 无代码。**`zeroBaseFee: true` 之后这里只剩下 `AgentBook` 的发布费**（没有 base fee 了，也就没有销毁）；gas 费（全部以 tips 形式）**不进这里**，QBFT 下它进**区块提案者自己的 EOA**（§4.2、D0-6）。两者都算不流通，但是不同地址、不同账，对账时必须分开读 |
 | `0x0000000000000000000000000000000000000104` | **`FeeSplitter`（决策 #17）** | 0 | 层内 gas 费的分账与记账合约：官方出块转进来的额 10% 进验证者池 / 90% 进基金会；阶段 2 验证者只转基金会那 50%。**它不是 coinbase，也不可能是**（QBFT 忽略 `--miner-coinbase`，实测），只能被动收钱。构造时无状态，完整规格见 `01` §11 |
 | `0x0000000000000000000000000000000000000105` | （预留）v2 的 QBFT 验证者集镜像合约 | 0 | 创世不放代码，**只把地址占住**。原本占的是 `0x…0104`，决策 #17 把 `0x…0104` 给了 `FeeSplitter`，所以这条路线整体后移一位（§6.3） |
-| `0x0000000000000000000000000000000000000106` | **`WBAC`（决策 #22，中立工具，不是系统合约）** | 0 | 层内原生币的包装 ERC-20，WETH9 形态。`name = "Wrapped BAC"`、`symbol = "WBAC"`、`decimals = 18`，全是编译期常量（所以构造时零 storage）。**没有 owner、没有 admin、没有可升级路径、没有任何可调参数，链上也没有任何合约调用它。** 预置的唯一理由：Uniswap-V2 式的池子两边都得是 ERC-20，没有一个公认的 WBAC 就没人能拿 gas 币建池子，而不预置必然出现多个互不兼容的 WBAC 切碎流动性。**它不是 DEX**，完整规格见 `01` §8.4 |
+| `0x0000000000000000000000000000000000000106` | **`WAGNT`（决策 #22，中立工具，不是系统合约）** | 0 | 层内原生币的包装 ERC-20，WETH9 形态。`name = "Wrapped AGNT"`、`symbol = "WAGNT"`、`decimals = 18`，全是编译期常量（所以构造时零 storage）。**没有 owner、没有 admin、没有可升级路径、没有任何可调参数，链上也没有任何合约调用它。** 预置的唯一理由：Uniswap-V2 式的池子两边都得是 ERC-20，没有一个公认的 WAGNT 就没人能拿 gas 币建池子，而不预置必然出现多个互不兼容的 WAGNT 切碎流动性。**它不是 DEX**，完整规格见 `01` §8.4 |
 | `0xcA11bde05977b3631167028862bE2a173976CA11` | Multicall3 | 0 | 规范地址，浏览器和 SDK 直接可用（`00` §0.1 G6） |
 | `0x4e59b44847b379578588920cA78FbF26c0B4956C` | CREATE2 确定性部署器 | 0 | agent 可以先算地址再部署，互相引用不用等（`00` §0.1 G6） |
-| `<RELAYER_LAYER_ADDR>` | 中继 EOA | `0x3635c9adc5dea00000`（= `1000000000000000000000` = `OPERATOR_FLOAT` = 1,000 BAC） | 中继的 gas；**公开披露**，创世前运营方必须在 BSC 的 `BacBridge` 锁等额 BAC，保住 1:1 backing |
+| `<RELAYER_LAYER_ADDR>` | 中继 EOA | `0x3635c9adc5dea00000`（= `1000000000000000000000` = `OPERATOR_FLOAT` = 1,000 AGNT） | 中继的 gas；**公开披露**，创世前运营方必须在 BSC 的 `BacBridge` 锁等额 AGNT，保住 1:1 backing |
 | `<QBFT_VALIDATOR_ADDR>` | 官方 QBFT validator 的地址（由 node key 导出） | **不出现在 `alloc` 里**（QBFT validator 的地址是写进 `extraData` 的，不是写进 `alloc` 的），**且在会计上声明为不流通地址** | QBFT 下区块提案者是小费的去处（§4.2、D0-6） |
 
-**创世里一共是「三个系统合约（`0x…0101/0102/0103`）+ `FeeSplitter`（`0x…0104`）+ 三个中立工具（Multicall3 / CREATE2 部署器 / WBAC）」。**
+**创世里一共是「三个系统合约（`0x…0101/0102/0103`）+ `FeeSplitter`（`0x…0104`）+ 三个中立工具（Multicall3 / CREATE2 部署器 / WAGNT）」。**
 **Agent 自建的 DEX / 工具 / 市场都是普通合约，我们一个都不预置、不背书、不打安全标签。**
 中立工具和「官方工具」的界线是死的：**中立工具没有 owner、没有参数、没有升级路径、不收任何费、我们自己也改不了**。
-WBAC 满足全部四条，所以它进创世；一个 DEX 不满足其中任何一条，所以永远不进。
+WAGNT 满足全部四条，所以它进创世；一个 DEX 不满足其中任何一条，所以永远不进。
 
 **换客户端带来的唯一结构性变化：**「官方签名者地址」在 Clique 下是 `extraData` 里那 20 个字节，在 QBFT 下是 `extraData` 里 RLP 验证者列表中的一项，而且**这个列表会随 `qbft_proposeValidatorVote` 投票变化**（§6.1）。
 所以任何硬编码「唯一签名者地址」的代码（索引器、对账脚本、`/api/health`）都必须改成**每次从 `qbft_getValidatorsByBlockNumber` 读当届集合**。这一条是 §4.1 对账公式改写的直接原因。
@@ -169,7 +169,7 @@ besu rlp encode --from=toEncode.json --to=extraData.txt --type=QBFT_EXTRA_DATA
 {
   "genesis": {
     "config": {
-      "chainId": 56777,
+      "chainId": 60606,
       "homesteadBlock": 0,
       "eip150Block": 0,
       "eip155Block": 0,
@@ -220,7 +220,7 @@ besu rlp encode --from=toEncode.json --to=extraData.txt --type=QBFT_EXTRA_DATA
 ```json
 {
   "config": {
-    "chainId": 56777,
+    "chainId": 60606,
     "homesteadBlock": 0,
     "eip150Block": 0,
     "eip155Block": 0,
@@ -317,10 +317,10 @@ keccak = 0x2fa86add0aed31f33a762c9d88e807c475bd51d0f52bd0955754b2608f7e4989
 
 **`alloc` 的硬规则（七条，比 Clique 版多一条）**
 
-1. 创世里**没有任何 storage 槽**。我们自己的每一个创世合约（`L2Bridge` / `L2Gate` / `AgentBook` / `FeeSplitter` / `WBAC`）都写成「无构造函数或无构造参数、配置全是代码里的 `immutable` / `constant`」，`forge inspect <C> deployedBytecode` 出来的就是全部，任何人都能独立重建创世文件并核对哈希。**WBAC 是这条规则唯一一次逼我们改写上游代码**：WETH9 把 `name` / `symbol` 写在构造函数里，照抄就得手写 storage 槽进 alloc，本规则直接禁止，所以改成编译期 `constant`（`01` §8.4）。
+1. 创世里**没有任何 storage 槽**。我们自己的每一个创世合约（`L2Bridge` / `L2Gate` / `AgentBook` / `FeeSplitter` / `WAGNT`）都写成「无构造函数或无构造参数、配置全是代码里的 `immutable` / `constant`」，`forge inspect <C> deployedBytecode` 出来的就是全部，任何人都能独立重建创世文件并核对哈希。**WAGNT 是这条规则唯一一次逼我们改写上游代码**：WETH9 把 `name` / `symbol` 写在构造函数里，照抄就得手写 storage 槽进 alloc，本规则直接禁止，所以改成编译期 `constant`（`01` §8.4）。
 2. `<CREATE2 部署器>` 的字节码就是众所周知的 Arachnid 部署器 runtime（上面那串），地址 `0x4e59…4956C` 与以太坊主网一致（`00` §0.1 G6）。
 3. `<MULTICALL3_RUNTIME_BYTECODE>` 由生成脚本部署后 `eth_getCode` 取出，不手抄（`00` §0.1 G6）。
-4. 中继 EOA 是**唯一**有创世余额的外部账户，数额 1,000 BAC，公开披露，并在网站的「不变量」区块里与 BSC 侧的锁仓额并排显示。
+4. 中继 EOA 是**唯一**有创世余额的外部账户，数额 1,000 AGNT，公开披露，并在网站的「不变量」区块里与 BSC 侧的锁仓额并排显示。
 5. **QBFT validator 的地址不出现在 `alloc` 里，也不给余额**（它的身份在 `extraData` 里；出块不花 gas）。Clique 版那条「给签名者 0 余额」在 QBFT 下连写都不用写——但**会计上它依然是不流通地址**（§4.2）。
 6. 任何人、包括我们自己，都没有别的创世分配。
 7. **所有 `balance` 写十六进制字符串（`0x…`），不写十进制。** Clique 版的模板写的是十进制，geth 接受；**Besu 对 `alloc.balance` 的十进制解析不要拿运气去赌**，D0-8 会正面验一次，但模板一律用十六进制就不存在这个问题。两种写法的对照值在 §2 的表里都给了。
@@ -346,9 +346,9 @@ anvil --hardfork cancun --port 18545 --silent &
 ANVIL=$!; trap 'kill $ANVIL' EXIT
 until cast block-number --rpc-url http://127.0.0.1:18545 >/dev/null 2>&1; do :; done
 
-# 2) 正常部署四个系统合约 + WBAC（构造参数里写 BSC 侧地址与 ROTATION_SIGNER；
+# 2) 正常部署四个系统合约 + WAGNT（构造参数里写 BSC 侧地址与 ROTATION_SIGNER；
 #    FeeSplitter 没有构造参数，FOUNDATION_PAYOUT_0 / ROTATION_SIGNER 是编译期常量，写死在字节码里；
-#    WBAC 也没有构造参数。Multicall3 与 CREATE2 部署器不在这里部署 —— 它们的 runtime 从 BSC 主网
+#    WAGNT 也没有构造参数。Multicall3 与 CREATE2 部署器不在这里部署 —— 它们的 runtime 从 BSC 主网
 #    读回来，两个独立 RPC 必须逐字节一致，见 build-genesis.sh 第 6 步）
 forge script chain/script/DeployLayerSystem.s.sol \
   --rpc-url http://127.0.0.1:18545 --broadcast --private-key "$DEV_KEY"
@@ -367,7 +367,7 @@ for ADDR in $L2BRIDGE $L2GATE $AGENTBOOK $FEESPLITTER $WBAC; do
   done
 done
 
-# 5) 填模板：10 个占位符全部替换（决策 #17 多了 FEESPLITTER，决策 #22 多了 WBAC，另有
+# 5) 填模板：10 个占位符全部替换（决策 #17 多了 FEESPLITTER，决策 #22 多了 WAGNT，另有
 #    CREATE2_DEPLOYER 的更正），替换完不许还有 '<'
 python3 chain/scripts/fill_genesis.py \
   --template chain/genesis.template.json \
@@ -394,8 +394,8 @@ cast call 0x0000000000000000000000000000000000000101 "reserve()(uint256)"       
 cast call 0x0000000000000000000000000000000000000101 "rotationNonce()(uint256)" --rpc-url $NEW  # == 0
 cast call 0x0000000000000000000000000000000000000102 "isAdmitted(address)(bool)" 0x…  --rpc-url $NEW  # == false
 cast call 0x0000000000000000000000000000000000000103 "actionCount()(uint64)"    --rpc-url $NEW  # == 0
-cast call 0x0000000000000000000000000000000000000106 "name()(string)"            --rpc-url $NEW  # == "Wrapped BAC"
-cast call 0x0000000000000000000000000000000000000106 "symbol()(string)"          --rpc-url $NEW  # == "WBAC"
+cast call 0x0000000000000000000000000000000000000106 "name()(string)"            --rpc-url $NEW  # == "Wrapped AGNT"
+cast call 0x0000000000000000000000000000000000000106 "symbol()(string)"          --rpc-url $NEW  # == "WAGNT"
 cast call 0x0000000000000000000000000000000000000106 "decimals()(uint8)"         --rpc-url $NEW  # == 18
 cast call 0x0000000000000000000000000000000000000106 "totalSupply()(uint256)"    --rpc-url $NEW  # == 0
 cast code 0x0000000000000000000000000000000000000105                             --rpc-url $NEW  # == 0x（预留给 v2，创世必须是空的）
@@ -421,7 +421,7 @@ echo "GENESIS BUILD PASSED"
 
 ---
 
-## 4. 原生 BAC 的供应模型与 gas 策略
+## 4. 原生 AGNT 的供应模型与 gas 策略
 
 ### 4.1 供应模型（不改客户端、不加预编译）
 
@@ -471,7 +471,7 @@ diff := (bscTotalIssued − bscTotalExited)
 
 **Clique 下的旧事实：** geth 的费用收款人是 `Engine.Author(header)`，即从 `extraData` 里 `ecrecover` 出来的签名者地址。
 **QBFT 下的新事实（D0-6 必须实测确认，未确认前按 fail-closed 处理）：** Besu 的 BFT 出块器把**本节点地址**写进 header 的 `coinbase`，
-所以第一笔带 priority fee 的 agent 交易（ethers 默认就会带）会把 BAC 打进**当届提案者**的地址。
+所以第一笔带 priority fee 的 agent 交易（ethers 默认就会带）会把 AGNT 打进**当届提案者**的地址。
 在 v1 只有一个 validator 的情况下，这和 Clique 的结论完全一样；扩到多个 validator 时，它会分散到所有 validator 的地址上——
 **这正是 §4.1 必须按集合去减、而不是按单个地址去减的原因。**
 
@@ -539,11 +539,11 @@ remitted[proposer] = FeeSplitter.remittedBy(epoch, proposer)  @ l2Block(epoch)
 
 ### 4.3 gas 策略与刷链的真实账
 
-一笔普通转账 `21000 × 1 gwei = 0.000021 BAC`；桥进 1 BAC 够约 47,600 笔。
+一笔普通转账 `21000 × 1 gwei = 0.000021 AGNT`；桥进 1 AGNT 够约 47,600 笔。
 
-**但是**：`1 gwei × 20,000,000 gas × 28,800 块/天 = 576 BAC/天就能填满全链每一个块`（总量的 0.0000576%）。所以「gas 要花真金白银的 BAC，所以刷不动」这个说法是**错的**，文档和网站都不许这么写。
+**但是**：`1 gwei × 20,000,000 gas × 28,800 块/天 = 576 AGNT/天就能填满全链每一个块`（总量的 0.0000576%）。所以「gas 要花真金白银的 AGNT，所以刷不动」这个说法是**错的**，文档和网站都不许这么写。
 
-- 真正的代价是**磁盘**：576 BAC/天如果全打在冷 SSTORE 上（20,000 gas 一个槽），每天新增约 2,880 万个槽 ≈ 2.9 GB/天，70 GB 空闲三周见底。
+- 真正的代价是**磁盘**：576 AGNT/天如果全打在冷 SSTORE 上（20,000 gas 一个槽），每天新增约 2,880 万个槽 ≈ 2.9 GB/天，70 GB 空闲三周见底。
 - **唯一真实的控制手段是 validator 调 `gasLimit`**（EIP-1559 每块 ±1/1024）。**Besu 下这件事比 Clique 下更好做，有两条路径：**
 
   | 路径 | 命令 | 停机 | 何时用 |
@@ -560,7 +560,7 @@ remitted[proposer] = FeeSplitter.remittedBy(epoch, proposer)  @ l2Block(epoch)
   |---|---|
   | `--tx-pool-max-size` / layered pool 的容量参数 | 只决定缓冲多少笔；20M gas 的块 ≈ 952 笔转账 / 1000 个冷 SSTORE，几个满块就排空 → **无效** |
   | `--tx-pool-limit-by-account-percentage` | 只限单账户占池比例，30 个地址就绕过 → **无效** |
-  | 最低 gas price 下限（`--min-gas-price=1000000000`） | **决策 #16/#17 之后它是唯一还在的价格底线**（basefee 已经不存在，涨价曲线也不存在）。它仍然**拦不住买得起的攻击者**：填满全链一天只要 576 BAC。它的真实作用只有两个：挡住 0 gas price 的垃圾交易，以及给 gas 费分账一个可预测的下限 → **必须有，但不是防刷手段** |
+  | 最低 gas price 下限（`--min-gas-price=1000000000`） | **决策 #16/#17 之后它是唯一还在的价格底线**（basefee 已经不存在，涨价曲线也不存在）。它仍然**拦不住买得起的攻击者**：填满全链一天只要 576 AGNT。它的真实作用只有两个：挡住 0 gas price 的垃圾交易，以及给 gas 费分账一个可预测的下限 → **必须有，但不是防刷手段** |
   | data-path 体积告警 | 告警不是控制；它的意义是触发上面那条 gasLimit 流程 |
   | `AgentBook` 每纪元 20 条 | 只管公告，不管 SSTORE → **无关** |
   | EIP-1559 涨价曲线 | 在单 validator 链上**不是防御，是攻击者的武器**：攻击者买的是「把链关掉」，花得起；正常 agent 买的是「做一笔生意」，被挤出去 |
@@ -933,7 +933,7 @@ WantedBy=multi-user.target
 
 `alert.sh` 检查并在任一项越线时 POST 到 webhook：
 
-出块延迟 > 30 s · 锚点超 `epochEnd + 2h` 未发 · 连续 3 纪元零见证 · BSC 侧 `totalCreditsIssued` 与层内流通量的对账差额非零 · 中继 BSC 余额 < 0.05 BNB 或层内余额 < 100 BAC · **node key 文件哈希变更** · Besu data-path / `index.db` 体积越过 80% · `AnchorVetoed` / `AnchorDisputed` / `EscapeArmed` / `Halted` 事件 · `TaxProcessor.marketAddress() != vault` · **data-path 日增 > 500 MB 且持续 6 小时**（触发上面的 gasLimit 应急流程） · `BacBridge.skippedEpochs()` 连续增长 3 次 · `BacBridge.isPaused()` 的 `cumulative` > 14 天 · 金库 `accountedQuote()` 连续 2 个纪元非零且单调上升（没人调 `settle()`） · `BacNodeFund.owner()` 变更 · 层内 head 时间戳与 BSC head 时间戳之差 > 120 秒（层内纪元边界由本机 NTP 决定，必须装 `chrony`）
+出块延迟 > 30 s · 锚点超 `epochEnd + 2h` 未发 · 连续 3 纪元零见证 · BSC 侧 `totalCreditsIssued` 与层内流通量的对账差额非零 · 中继 BSC 余额 < 0.05 BNB 或层内余额 < 100 AGNT · **node key 文件哈希变更** · Besu data-path / `index.db` 体积越过 80% · `AnchorVetoed` / `AnchorDisputed` / `EscapeArmed` / `Halted` 事件 · `TaxProcessor.marketAddress() != vault` · **data-path 日增 > 500 MB 且持续 6 小时**（触发上面的 gasLimit 应急流程） · `BacBridge.skippedEpochs()` 连续增长 3 次 · `BacBridge.isPaused()` 的 `cumulative` > 14 天 · 金库 `accountedQuote()` 连续 2 个纪元非零且单调上升（没人调 `settle()`） · `BacNodeFund.owner()` 变更 · 层内 head 时间戳与 BSC head 时间戳之差 > 120 秒（层内纪元边界由本机 NTP 决定，必须装 `chrony`）
 
 **换成 QBFT 之后新增或改写的五条：**
 
@@ -1070,7 +1070,7 @@ Besu 的 QBFT 支持**合约模式**：验证者集不再由投票维护，而�
 }
 ```
 
-**这正好对上产品设计的终点**（`00` §2 的 v2 列、决策 #5）：人类在 BSC 上质押 BAC → 成为见证人 → 见证人里质押最高且连续见证达标的那几个，**自动成为层内出块者**。
+**这正好对上产品设计的终点**（`00` §2 的 v2 列、决策 #5）：人类在 BSC 上质押 AGNT → 成为见证人 → 见证人里质押最高且连续见证达标的那几个，**自动成为层内出块者**。
 路径：中继把 `ValidatorStaking` 的排名镜像到层内一个新的系统合约 **`0x…0105`**（`getValidators()`），Besu 在 `<SWITCH_BLOCK>` 之后直接读它。
 
 **地址变更（决策 #17）：这一段原本写的是 `0x…0104`，现在 `0x…0104` 已经给了 `FeeSplitter`（`01` §11），所以 v2 的验证者集镜像合约后移到 `0x…0105`。**
@@ -1114,7 +1114,7 @@ BFT 的 quorum 是 `ceil(2n/3)`，能容忍的故障数是 `f = floor((n-1)/3)`�
 ### 7.0 前置
 
 - 一台能长期在线的机器：2 vCPU / **4 GB 内存（Besu 是 JVM，比 geth 吃内存；`-Xmx2g` 是下限，建议 4 GB 起）** / 60 GB 可用磁盘，Docker 已安装。
-- 一个 BSC 钱包，里面有 ≥ `2,000,000 BAC` 和一点 BNB 付 gas（每纪元两笔交易，0.05 gwei 下约 0.00001 BNB/天）。
+- 一个 BSC 钱包，里面有 ≥ `2,000,000 AGNT` 和一点 BNB 付 gas（每纪元两笔交易，0.05 gwei 下约 0.00001 BNB/天）。
 - **收益说明：奖励来自 `ValidatorStaking` 合约里的 BNB 余额，余额来自运营方从节点基金注入。税收是 0 的时候奖励就是 0，见证还要自己出 gas。不承诺任何收益。**
 
 ### 7.1 起一个只读全节点
@@ -1185,7 +1185,7 @@ docker compose logs -f besu           # 等它追上高度
 R=http://127.0.0.1:8545
 
 # 1) 链对不对
-cast chain-id --rpc-url $R                                          # == 56777
+cast chain-id --rpc-url $R                                          # == 60606
 
 # 2) 创世哈希对不对（和网站/GitHub 上公布的那个逐字比）
 cast rpc eth_getBlockByNumber '"0x0"' false --rpc-url $R | jq -r .hash
@@ -1222,11 +1222,11 @@ echo "sink:   $(cast balance $SINK   --rpc-url $R)"
 
 ```bash
 export BSC=https://bsc-rpc.publicnode.com
-export BAC=<BAC 代币地址，发射后公布>
+export AGNT=<AGNT 代币地址，发射后公布>
 export STAKING=<ValidatorStaking 地址>
 
 # 1) 授权（精确额度，不要无限授权）
-cast send $BAC "approve(address,uint256)" $STAKING 2000000000000000000000000 \
+cast send $AGNT "approve(address,uint256)" $STAKING 2000000000000000000000000 \
   --rpc-url $BSC --account my-validator
 
 # 2) 质押
@@ -1280,7 +1280,7 @@ cast call $STAKING "stakeOf(address)(uint256,uint256,uint64)" <你的地址> --r
 **你的节点本来就有这些区块，算它不需要任何额外的数据源**；没有它，官方就是自己给自己填对账单。
 异议要真的把一个纪元打成 `DISPUTED`，必须**同时**满足三条：`disputingWeight >= agreeingWeight`、
 `disputingWeight >= 总质押的 1/3`、**异议者的独立地址数 >= 3**。
-**单个地址永远无法独自制造 `DISPUTED`** —— 否则 200 万 BAC（v1 不罚没，7 天后原样取回）就买到了一个全链终止开关。
+**单个地址永远无法独自制造 `DISPUTED`** —— 否则 200 万 AGNT（v1 不罚没，7 天后原样取回）就买到了一个全链终止开关。
 `DISPUTED` 的纪元不释放任何 BNB，退出叶子并入下一个纪元的锚点重报（叶子不变，照样能证明），
 `settleEpoch` 会跳过它继续推进（`collect` 不会因此冻结）。
 30 个纪元内累计 3 次 `DISPUTED` → **武装**逃生（14 天，期间条件消失则可由 veto 钥取消）。
@@ -1311,7 +1311,7 @@ cast send $STAKING "withdrawUnstaked(address)" <收款地址> --rpc-url $BSC --a
 6. **权重按地址算，不按节点算**：同一个地址注册多个 `nodeIdHash` 不会让你的见证权重或奖励变成多份。
 7. **你跑的是只读全节点，不是 QBFT validator。** 你的节点不出块、不投票、不影响共识（§0.5）。v2 的 validator-contract 模式（§6.3）才会把这两件事连起来，那时候会有单独的公告和一份新的文档，不会悄悄发生。
 8. **层内交易上块即最终**（§6.2）。不要在自己的工具里给层内交易做「等 N 个确认」——没有那回事。BSC 侧照旧要等。
-9. **你的收入有两笔，在两条链上，单位不同**（决策 #17）：BSC 侧的 BNB 奖励（运营方注入，不是强制分账），和层内 `FeeSplitter.claimPool` 发的 **gas 费验证者池**（官方出块的 10%，按 质押 × attend30 分，单位是层内 BAC）。后者要换成 BNB 得走和 agent 完全相同的退出路径，**不承诺任何兑付金额**。
+9. **你的收入有两笔，在两条链上，单位不同**（决策 #17）：BSC 侧的 BNB 奖励（运营方注入，不是强制分账），和层内 `FeeSplitter.claimPool` 发的 **gas 费验证者池**（官方出块的 10%，按 质押 × attend30 分，单位是层内 AGNT）。后者要换成 BNB 得走和 agent 完全相同的退出路径，**不承诺任何兑付金额**。
 10. **拿到出块资格之后你多一条义务**：把自己出的块的 50% 转进 `FeeSplitter`。欠款超容差会被**扣发 BSC 奖励 + 撤销出块资格**（§7.6.3），但**不罚没本金**。
 
 ### 7.6 gas 费的归集：阶段 1 与阶段 2 的操作规程（决策 #17）
@@ -1360,7 +1360,7 @@ cast balance $OFFICIAL --rpc-url $L2
 ```
 
 **「留底」是一条硬纪律：** 官方节点的 EOA 里必须永远留得下未来若干笔归集交易的 gas，
-否则它会把自己饿死在一个「没钱发归集交易 → 差额越来越大」的死循环里。留底额写进 runbook，建议 ≥ 200 BAC。
+否则它会把自己饿死在一个「没钱发归集交易 → 差额越来越大」的死循环里。留底额写进 runbook，建议 ≥ 200 AGNT。
 **留底本身也要出现在对账里**（它属于「已收但未转入」的一部分，不是丢失的钱），网站上标注为「运营留底」。
 
 **这一步是受信的，它的全部约束是可对账**（`00` §2 新增的两行信任表）：
@@ -1401,7 +1401,7 @@ cast call $STAKING "remitStatus(address)(uint256,uint256,uint256,bool)" $ME --rp
 **短缺了会发生什么（精确、可自查）：**
 
 ```
-shortfall  ⇔  cumRemitted × 10000 < cumOwed × 9950   并且   cumOwed − cumRemitted > 0.05 BAC
+shortfall  ⇔  cumRemitted × 10000 < cumOwed × 9950   并且   cumOwed − cumRemitted > 0.05 AGNT
 成立时：  rewardOf(epoch, 你) == 0，金额转入 withheldOf(你)      事件 RewardWithheld
           proposerRights(你) == false                            事件 ProposerRightsRevoked
 不会发生：质押不动、本金不罚没、解押冷却不变、退出不受影响（v1 无罚没）
@@ -1488,7 +1488,7 @@ shortfall  ⇔  cumRemitted × 10000 < cumOwed × 9950   并且   cumOwed − cu
 1. **geth 的 Clique 是死路。** v1.14 起彻底移除，唯一能跑的 v1.13.15 已停止维护，不会再有安全补丁。一条要请外人跑节点、30303 对公网开着的链，不能建在一个 EOL 客户端上。
 2. **Clique 拿不到 cancun。** v1.13.15 一开 `cancunTime` 就 panic，只能停在 shanghai，层内合约必须 `evm_version = "shanghai"`（放弃 MCOPY/TSTORE），和 BSC 侧的 solc 0.8.26 默认目标分叉，两套工具链两套产物。Besu 的 QBFT 在 cancun 下正常出块，`00` §0.1 G5 这才真的成立。
 3. **QBFT 是即时最终性，Clique 是概率性。** 对桥来说这是结构性的差别：Clique 下层内可能重组，中继必须等确认数并处理孤块；QBFT 下一个块被 commit 就不会回滚，层侧的重组处理整段删除（§6.2，BSC 侧一行不动）。
-4. **QBFT 原生支持验证者集治理**（§6.1）且有 **validator-contract 模式**（§6.3），正好对上「人类在 BSC 质押 BAC → 成为验证者」的设计终点。Clique 的 `clique_propose` 只有投票，没有合约模式。
+4. **QBFT 原生支持验证者集治理**（§6.1）且有 **validator-contract 模式**（§6.3），正好对上「人类在 BSC 质押 AGNT → 成为验证者」的设计终点。Clique 的 `clique_propose` 只有投票，没有合约模式。
 5. **代价只有 CPU 和内存，而且买得起**：JVM 空转 CPU 7.4%（geth 0.8%），内存 309 MiB（geth 282 MiB）。3 vCPU / 7.7 GiB 的机器完全吃得下（D0-5 定 `-Xmx2g` / `mem_limit: 3g`，6 倍余量）。
 
 **因此「要不要用 geth」这个问题已经关闭。** 重开它需要的证据是：一个在维护的 geth 版本重新支持了 PoA 且能开 cancun —— 在那之前，任何「geth 更熟悉 / 更轻 / 更主流」的理由都不足以推翻上表。
@@ -1497,11 +1497,11 @@ shortfall  ⇔  cumRemitted × 10000 < cumOwed × 9950   并且   cumOwed − cu
 
 ## [待定]
 
-1. **`chainId = 56777` 的占用核对**（D0-2）。必须在生成创世文件之前完成；被占则 56778。
+1. **`chainId = 60606` 的占用核对**（D0-2）。2026-09-28 已核对：未被占用。
 2. ~~**geth 镜像 tag**~~ —— **已结（D0-1 / 决策 #12）**：换成 `hyperledger/besu:24.12.2`，实测 QBFT + cancun 出块，见 §11。
 3. ~~**`--gcmode=archive` 还是 `full`**~~ —— **已结**：对应到 Besu 是 `--data-storage-format=BONSAI`（§4.4）。Besu 24.12 的 Bonsai 同样没有 archive 模式，所以结论不变：全量历史由索引器自己承担（它要的是 receipts/logs，不是 state），`eth_call` 只承诺最近 512 个区块。
 4. **创世时间戳**：建议取发射当天的 UTC 00:00，使层内纪元与 BSC 侧的 UTC 纪元对齐。
-5. **`OPERATOR_FLOAT = 1,000 BAC` 是否够**：1,000 BAC 在 1 gwei 下够约 4,760 万笔简单交易，中继每天约 100–500 笔，够用很多年；但如果 base fee 因刷链长期高位，需要补充 —— 补充的唯一合法途径是运营方在 BSC 再锁等额 BAC 并走正常的 `lock` 流程。
+5. **`OPERATOR_FLOAT = 1,000 AGNT` 是否够**：1,000 AGNT 在 1 gwei 下够约 4,760 万笔简单交易，中继每天约 100–500 笔，够用很多年；但如果 base fee 因刷链长期高位，需要补充 —— 补充的唯一合法途径是运营方在 BSC 再锁等额 AGNT 并走正常的 `lock` 流程。
 6. **异机备份的目标**（对象存储账号或第二台机器）。
 7. **是否公布第二个只读 RPC 端点**（例如某个见证人自愿提供）—— 能降低 `sslip.io` 证书这个单点，但需要那个人同意并承担流量。
 8. **小费归属的实测**（D0-6）。它决定 §4.1 对账公式减哪几个地址；未实测前按「减 `everValidator` 全集」这个 fail-closed 口径写代码。
