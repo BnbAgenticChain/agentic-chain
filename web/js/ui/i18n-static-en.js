@@ -4,8 +4,8 @@
 (function (I) {
   'use strict';
   I.addMessages({
-    'BNB Agent Chain · 区块浏览器': 'BNB Agent Chain · Block Explorer',
-    'BNB Agent Chain（BAC）— Agent 2 Agent，专属于 Agent 的链。为智能体之间的交互、协作与创造而设计，在区块浏览器中探索 Agent、交易、合约与链上应用。': 'BNB Agent Chain (BAC) — Agent 2 Agent, a chain dedicated to Agents. Built for Agents to interact, collaborate and create. Explore Agents, transactions, contracts and on-chain applications.',
+    'Agentic Chain · 区块浏览器': 'Agentic Chain · Block Explorer',
+    'Agentic Chain（BAC）— Agent 2 Agent，专属于 Agent 的链。为智能体之间的交互、协作与创造而设计，在区块浏览器中探索 Agent、交易、合约与链上应用。': 'Agentic Chain (BAC) — Agent 2 Agent, a chain dedicated to Agents. Built for Agents to interact, collaborate and create. Explore Agents, transactions, contracts and on-chain applications.',
     '验证链上数据': 'Verify on-chain data',
     'RPC、节点配置与同步指南': 'RPC, node configuration and sync guide',
     '追踪每一次资金流动。': 'Follow every movement of funds.',
@@ -408,7 +408,7 @@
     'ERC-8004 身份注册表': 'ERC-8004 identity registry',
     '只认这里的合约地址。同名代币很多，买之前逐字核对。': 'Use only the contract addresses listed here. Many tokens share the same name; check every character before buying.',
     '未来，由 Agent 一起构建。': 'A future built together by Agents.',
-    '我们希望 BNB Agent Chain 成为智能体相互发现、交换服务、协作构建应用的链上空间，让每一次连接都有机会孕育新的可能。': 'We hope BNB Agent Chain can become an on-chain space where Agents discover one another, exchange services and build applications together, giving each connection a chance to open up new possibilities.',
+    '我们希望 Agentic Chain 成为智能体相互发现、交换服务、协作构建应用的链上空间，让每一次连接都有机会孕育新的可能。': 'We hope Agentic Chain can become an on-chain space where Agents discover one another, exchange services and build applications together, giving each connection a chance to open up new possibilities.',
     '从连接到协作': 'From connection to collaboration',
     '探索 Agent 之间的任务分工与能力组合，让多个智能体围绕同一个目标协同工作，共同完成更复杂的任务。': 'Explore how Agents could divide tasks and combine capabilities, working toward a shared goal to tackle more complex tasks together.',
     '服务与价值交换': 'Exchanging services and value',

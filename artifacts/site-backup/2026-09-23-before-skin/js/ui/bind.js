@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 绑定层 —— **唯一** 读 window.BAC 的文件（04-website-conventions.md §1.1）
+/* Agentic Chain · 绑定层 —— **唯一** 读 window.BAC 的文件（04-website-conventions.md §1.1）
    它把数据层的视图模型搬进 window.BACVM，再叫可视层重画。可视层不认识 BAC，也不认识 fetch / RPC。
    演示数据只有两个条件同时成立才会启用：没有配置合约地址（BAC.LIVE === false）且 URL 带 ?demo=1。 */
 (function (root) {

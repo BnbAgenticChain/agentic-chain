@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 可视层 · 工具（没有任何链代码，没有 fetch，没有 RPC）
+/* Agentic Chain · 可视层 · 工具（没有任何链代码，没有 fetch，没有 RPC）
    这一层只认 window.BACVM（视图模型）。链上数据怎么来的，由 js/ui/bind.js 一个人负责。
    格式化优先用数据层的 BAC.fmt（同一套口径），数据层没加载时用这里的同名实现兜底。 */
 (function (root) {

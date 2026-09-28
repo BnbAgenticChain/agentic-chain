@@ -1,5 +1,5 @@
 -- 001_init.sql
--- BNB Agent Chain 索引器数据库。
+-- Agentic Chain 索引器数据库。
 -- 表名与列名逐字抄自 docs/03-INTERFACES.md §2，一个字母都不许改：
 -- 改一个字段名就要同时改索引器、API、网站数据层、SDK 与它们的测试。
 --

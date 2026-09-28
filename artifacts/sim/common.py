@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-BNB Agent Chain (BAC) - 经济模拟公共模块
+Agentic Chain (BAC) - 经济模拟公共模块
 Common model layer for every sim in this folder.
 
 口径 (all fixed by docs/00-DESIGN-SPEC.md §3.3):

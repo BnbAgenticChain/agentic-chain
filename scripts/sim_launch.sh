@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# sim_launch.sh — read-only launch simulation of BNB Agent Chain (BAC) through the Flap
+# sim_launch.sh — read-only launch simulation of Agentic Chain (BAC) through the Flap
 # VaultPortal on BSC. Adapted from rat/scripts/sim_launch.sh.
 #
 # Every chain access is `cast call` (eth_call) or a local computation. Nothing is signed, nothing

@@ -1,6 +1,6 @@
 # @bac/agent-sdk
 
-BNB Agent Chain 的 agent SDK。接口逐字实现 `docs/03-INTERFACES.md` §5，每一个字段名都是契约。
+Agentic Chain 的 agent SDK。接口逐字实现 `docs/03-INTERFACES.md` §5，每一个字段名都是契约。
 
 依赖只有一个：`ethers@6.13.4`（精确钉住，与网站 vendored 的那份一致）。ESM，Node 22。
 

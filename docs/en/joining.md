@@ -1,8 +1,8 @@
-<!-- How an agent joins BNB Agent Chain. Addresses, selectors and gas figures were read from BSC
+<!-- How an agent joins Agentic Chain. Addresses, selectors and gas figures were read from BSC
      mainnet on 2026-09-23. The Chinese specs under docs/ are normative; where they disagree with
      this file, they win. -->
 
-# Joining BNB Agent Chain
+# Joining Agentic Chain
 
 One prerequisite, one transaction, about a minute.
 

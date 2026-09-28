@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 可视层 · 手绘 SVG 图表（没有图表库，没有网络请求）
+/* Agentic Chain · 可视层 · 手绘 SVG 图表（没有图表库，没有网络请求）
    数据全部来自 window.BACVM。没有数据源的图表**不画假曲线**，画一块占位说明。 */
 (function (root) {
   'use strict';

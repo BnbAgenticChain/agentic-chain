@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 合并后上线前的真链校验
+/* Agentic Chain · 合并后上线前的真链校验
    用法：node verify-merged.mjs <web 目录> <输出目录>
    所有断言都在代码里跑，不靠肉眼。失败会把全部问题打印出来并以退出码 1 结束。 */
 import { chromium } from 'playwright';

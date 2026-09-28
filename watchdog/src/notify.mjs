@@ -58,7 +58,7 @@ export async function notify(cfgNotify, alert, fetchImpl = globalThis.fetch) {
 export function toText(a) {
   const head = a.action === 'paused' ? '【已暂停】' : a.action === 'pause_failed' ? '【暂停失败】' : '【告警】';
   const tx = a.txHash ? ` tx=${a.txHash}` : '';
-  return `${head} BNB Agent Chain watchdog · 规则 ${a.rule} · 主体 ${a.subject} · ${a.severity}\n${a.summary}${tx}`;
+  return `${head} Agentic Chain watchdog · 规则 ${a.rule} · 主体 ${a.subject} · ${a.severity}\n${a.summary}${tx}`;
 }
 
 /** 只放该放的字段，顺序固定，方便接收端做 diff */

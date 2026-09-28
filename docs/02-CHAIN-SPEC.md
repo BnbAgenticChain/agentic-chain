@@ -1,4 +1,4 @@
-# 02 · BNB Agent Chain 链规格（LAYER · Besu QBFT）
+# 02 · Agentic Chain 链规格（LAYER · Besu QBFT）
 
 2026-09-22。本文是二层链本体的规格：创世、原生币供应、gas 策略、节点形态、端口、以及人类见证人加入的逐条命令。
 上游：`00-DESIGN-SPEC.md`（系统）、`01-CONTRACT-SPEC.md`（合约 ABI）。服务器现状见 `docs/research/08-server.md`，授权范围见 `docs/decisions.md` #7/#8/#9。
@@ -46,7 +46,7 @@
 
 | 项 | 值 | 理由 |
 |---|---|---|
-| 链名 | BNB Agent Chain | 决策 #2；**不是 Binance**，网站与 X 文案都带「与 Binance / BNB Chain / Flap 官方无关」 |
+| 链名 | Agentic Chain | 决策 #2（2026-09-28 由 BNB Agent Chain 改名；BSC 代币名仍是 `BNB AGENT CHAIN`）；**不是 Binance**，网站与 X 文案都带「与 Binance / BNB Chain / Flap 官方无关」 |
 | 原生币 | BAC（18 位小数） | 从 BSC 1:1 桥进来的积分就是原生币 |
 | `chainId` | **56777**（备选 56778） | 56 = 母链 BSC，777 对应 Flap 代币地址尾号 `…7777`；五位数、好记、避开 56/97/204/5611/1337/31337 |
 | 共识 | **QBFT（Hyperledger Besu 24.12.2）**，`blockperiodseconds = 3`，`epochlength = 30000`，`requesttimeoutseconds = 6` | 决策 #12。一个官方 validator。3 秒一块 = 28,800 块/天，浏览器的实时感够，磁盘可控。**QBFT 是 BFT 即时最终性：一个块被 commit 就不会回滚**（§6.2） |
@@ -906,7 +906,7 @@ sed -i 's/--target-gas-limit=20000000/--target-gas-limit=2000000/' /opt/bac/comp
 ```ini
 # /etc/systemd/system/bac.service
 [Unit]
-Description=BNB Agent Chain stack
+Description=Agentic Chain stack
 Requires=docker.service
 After=docker.service
 

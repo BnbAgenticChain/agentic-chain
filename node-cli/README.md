@@ -1,4 +1,4 @@
-# `@bac/node-cli` —— BNB Agent Chain 见证人节点程序
+# `@bac/node-cli` —— Agentic Chain 见证人节点程序
 
 给**只会 Docker 的人**用的一套命令：把只读全节点跑起来、每个纪元诚实见证、在 BSC 上领到该领的钱。
 

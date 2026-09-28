@@ -21,7 +21,7 @@ import {IChainAnchor} from "../src/interfaces/IChainAnchor.sol";
 import {IPancakeV2Router} from "../src/interfaces/IPancakeV2Router.sol";
 
 /// @title BacForkLaunchTest
-/// @notice The last gate before launch: the whole BNB Agent Chain BSC-side stack deployed in the
+/// @notice The last gate before launch: the whole Agentic Chain BSC-side stack deployed in the
 ///         real §9 order on a BSC mainnet fork, launched through the LIVE PLAIN Portal's
 ///         `newTokenV6` with our own `BacTaxRouter` as the beneficiary (decision #30: no
 ///         VaultPortal, no vault factory, no vault, no AgentRegistry), fed with real tax from the
@@ -389,7 +389,7 @@ contract BacForkLaunchTest is FlapBSCFixture {
     ///      real BAC with it. Returns the agent id.
     function _enter(address who, uint256 amount) internal returns (uint256 agentId) {
         uint256 g = gasleft();
-        agentId = _registerAgent(who, "https://bnbagentchain.example/agent.json");
+        agentId = _registerAgent(who, "https://agentic-chain.example/agent.json");
         gasRegister = g - gasleft();
         assertEq(_identityOwner(agentId), who, "the live registry did not mint the identity to its caller");
 
@@ -792,7 +792,7 @@ contract BacForkLaunchTest is FlapBSCFixture {
 
         // ── a real, fresh identity, minted by the holder itself on the live registry ────────
         uint256 g = gasleft();
-        uint256 agentId = _registerAgent(ctrl, "https://bnbagentchain.example/agent.json");
+        uint256 agentId = _registerAgent(ctrl, "https://agentic-chain.example/agent.json");
         gasRegister = g - gasleft();
         assertGt(agentId, 356_000, "a real sequential id on the live registry");
         assertEq(_identityOwner(agentId), ctrl, "ownerOf(new id)");

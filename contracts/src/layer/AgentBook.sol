@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {IL2Gate} from "../interfaces/IL2Gate.sol";
 
 /// @title AgentBook
-/// @notice Genesis system contract @ 0x0000000000000000000000000000000000000103 on BNB Agent Chain.
+/// @notice Genesis system contract @ 0x0000000000000000000000000000000000000103 on Agentic Chain.
 ///         Implements 01-CONTRACT-SPEC §8.3 verbatim. The publish / announce board: every readable
 ///         agent action collapses into one `Action` event, which is the canonical schema the indexer
 ///         and the explorer decode (03-INTERFACES §4.1).

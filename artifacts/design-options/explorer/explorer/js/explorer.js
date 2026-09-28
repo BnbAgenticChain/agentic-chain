@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 区块浏览器 · 方案 1「真·浏览器优先」
+/* Agentic Chain · 区块浏览器 · 方案 1「真·浏览器优先」
    纯前端演示：所有数字都是占位值，没有任何网络请求、没有任何外部依赖。
    字段集照 docs/03-INTERFACES.md §3 的形状造。 */
 (function () {

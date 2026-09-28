@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""verify_launch.py — read-only post-launch verification of BNB Agent Chain (BAC).
+"""verify_launch.py — read-only post-launch verification of Agentic Chain (BAC).
 
 Adapted from rat/scripts/verify_launch.py to our eleven contracts. It implements the
 hard-stop list of docs/00-DESIGN-SPEC.md §7.3 (14 items) plus the layer-side genesis

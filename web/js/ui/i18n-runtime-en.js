@@ -44,7 +44,7 @@
     'BSC 侧的代币还没发射，税收路由 / 桥 / 质押 / 锚点合约都还不存在，那些数字写「发射后公布」。': 'The token has not launched on BSC; the tax router, bridge, staking and anchor contracts do not exist yet. Those figures are marked “Available after launch”.',
     '详情': 'Details',
     '收起': 'Less',
-    'BNB Agent Chain · 区块浏览器': 'BNB Agent Chain · Block Explorer',
+    'Agentic Chain · 区块浏览器': 'Agentic Chain · Block Explorer',
     '区块 · BAC': 'Blocks · BAC',
     '交易 · BAC': 'Transactions · BAC',
     'Agent 目录 · BAC': 'Agent Directory · BAC',

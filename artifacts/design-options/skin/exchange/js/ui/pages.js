@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 可视层 · 各个页面的渲染
+/* Agentic Chain · 可视层 · 各个页面的渲染
    规矩：这里只读 window.BACVM；要更多数据时只向 window.BACBIND 要（它才是唯一碰 window.BAC 的人）。
    这一层不认识 fetch，也不认识 RPC。 */
 (function (root) {

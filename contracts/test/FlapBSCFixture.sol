@@ -38,7 +38,7 @@ import {VanityHelper} from "./lib/VanityHelper.sol";
 ///    IPortal p = IPortal(PORTAL);
 ///    ```
 ///
-/// 3. Launch a V3 tax token through the PLAIN Portal (BNB Agent Chain decision #30: no
+/// 3. Launch a V3 tax token through the PLAIN Portal (Agentic Chain decision #30: no
 ///    VaultPortal, no vault factory, no vault — the tax `beneficiary` is any address, a contract
 ///    included, and the Portal does not look at it):
 ///

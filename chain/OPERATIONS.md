@@ -84,7 +84,7 @@ systemd unit：
 ```ini
 # /etc/systemd/system/bac.service
 [Unit]
-Description=BNB Agent Chain stack
+Description=Agentic Chain stack
 Requires=docker.service
 After=docker.service
 

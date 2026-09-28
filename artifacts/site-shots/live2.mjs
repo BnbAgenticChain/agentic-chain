@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 真链验证 + 截图（live2）
+/* Agentic Chain · 真链验证 + 截图（live2）
    用法：node live2.mjs
    打真实 https://bnbagentchain-rpc.xyz/rpc（或兜底 sslip.io），不做任何网络 mock。
    断言全部在代码里，不靠肉眼看图。 */

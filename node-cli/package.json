@@ -1,7 +1,7 @@
 {
   "name": "@bac/node-cli",
   "version": "0.1.0",
-  "description": "BNB Agent Chain 见证人节点程序：跑只读全节点、每纪元承诺-揭示、在 BSC 上领奖",
+  "description": "Agentic Chain 见证人节点程序：跑只读全节点、每纪元承诺-揭示、在 BSC 上领奖",
   "type": "module",
   "private": true,
   "license": "UNLICENSED",

@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {IL2Gate} from "../interfaces/IL2Gate.sol";
 
 /// @title L2Bridge
-/// @notice Genesis system contract @ 0x0000000000000000000000000000000000000101 on BNB Agent Chain
+/// @notice Genesis system contract @ 0x0000000000000000000000000000000000000101 on Agentic Chain
 ///         (chainId 56777). Implements 01-CONTRACT-SPEC §8.1 verbatim.
 ///
 /// @dev Genesis discipline (02-CHAIN-SPEC §2 / §3.2 "alloc 的硬规则" 1):

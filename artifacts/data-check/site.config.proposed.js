@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 站点配置（同步加载，必须排在 vendor/ethers 与 js/data/* 之前）
+/* Agentic Chain · 站点配置（同步加载，必须排在 vendor/ethers 与 js/data/* 之前）
    v2（决策 #29 / #30 / #31 / #35）：没有 factory / vault / registry / vaultPortal 了。
    BSC 侧分三个阶段，数据层自己用 eth_getCode 判断，不用改这个文件就会翻过来：
      (a) 只有代币地址（已由 lockSalt 锁定，地址上还没有代码）→ 合约和代币的数字都写「发射后公布」
@@ -21,7 +21,7 @@ window.BAC_CONFIG = Object.assign({
   logRpcs: ['https://bsc-rpc.publicnode.com'],
   explorer: 'https://bscscan.com',
 
-  /* ── 层内（BNB Agent Chain）──────────────────────────── */
+  /* ── 层内（Agentic Chain）──────────────────────────── */
   layerChainId: 56777,
   layerRpc: 'https://bnbagentchain-rpc.xyz/rpc',
   // 域名失效/被劫持时的兜底：永久保留，任何人都能用它独立核对这条链
@@ -61,6 +61,6 @@ window.BAC_CONFIG = Object.assign({
   /* ── 站点链接（发射后填）────────────────────────────── */
   flapUrl: '',
   x: 'https://x.com/Bnbagentchain',
-  github: 'https://github.com/BnbAgentChainL2/bnb-agent-chain',
+  github: 'https://github.com/AgenticChain/agentic-chain',
   siteUrl: 'https://bnbagentchain-scan.com'
 }, window.BAC_CONFIG || {});

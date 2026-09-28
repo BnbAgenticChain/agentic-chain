@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# chain/build-genesis.sh - build the BNB Agent Chain layer genesis from nothing.
+# chain/build-genesis.sh - build the Agentic Chain layer genesis from nothing.
 #
 # Implements 02-CHAIN-SPEC.md 3.3, adapted to what we actually have:
 #   * geth is gone from the toolchain (see docs/research/10-consensus-client.md), so the system

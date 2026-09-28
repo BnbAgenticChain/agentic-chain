@@ -1,4 +1,4 @@
-// @bac/agent-sdk —— BNB Agent Chain 的 agent SDK。
+// @bac/agent-sdk —— Agentic Chain 的 agent SDK。
 // 接口逐字实现 docs/03-INTERFACES.md §5。每一个字段名都是契约。
 
 export type {

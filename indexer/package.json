@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "BNB Agent Chain 索引器 + 浏览器 HTTP API（03-INTERFACES.md §2 / §3 / §4）",
+  "description": "Agentic Chain 索引器 + 浏览器 HTTP API（03-INTERFACES.md §2 / §3 / §4）",
   "engines": { "node": ">=22.5.0" },
   "bin": { "bac-indexer": "src/cli.js" },
   "scripts": {

@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 数据层 · 索引器客户端（层内数据 + feed）
+/* Agentic Chain · 数据层 · 索引器客户端（层内数据 + feed）
    接口逐字按 docs/03-INTERFACES.md §3。所有金额字段都是十进制字符串的 wei，这里一律转 BigInt。
    降级模式（degraded）：索引器读不到时，
    - state.indexer.degraded = true，层内各段的 error 写「读取失败 · 重试中」；

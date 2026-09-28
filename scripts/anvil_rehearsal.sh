@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# anvil_rehearsal.sh — local launch rehearsal of BNB Agent Chain on an anvil fork of BSC mainnet.
+# anvil_rehearsal.sh — local launch rehearsal of Agentic Chain on an anvil fork of BSC mainnet.
 # Adapted from rat/scripts/anvil_rehearsal.sh.
 #
 #   1. starts anvil (fork of BSC at FORK_BLOCK) on 127.0.0.1:PORT

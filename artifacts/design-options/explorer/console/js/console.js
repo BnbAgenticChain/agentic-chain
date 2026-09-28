@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 区块浏览器 · 方案 2「操作台网格」
+/* Agentic Chain · 区块浏览器 · 方案 2「操作台网格」
    纯前端设计稿：所有数字都是占位值，没有任何网络请求、没有任何外部依赖。
    正式站点的每一个字段都来自 docs/03-INTERFACES.md §3 定义的 HTTP API。 */
 (function () {

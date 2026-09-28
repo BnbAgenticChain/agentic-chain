@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 站点截图
+/* Agentic Chain · 站点截图
    用法：node shoot.mjs <web 目录> <输出目录> [--demo]
    --demo 时给每个 URL 加上 ?demo=1（只有在 site.config.js 没填地址时才会真的出演示数据）。
    同时收集 console 错误、失败请求和横向溢出，跑完打印出来。 */

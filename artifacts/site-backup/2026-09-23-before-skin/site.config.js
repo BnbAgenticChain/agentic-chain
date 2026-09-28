@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 站点配置（同步加载，必须排在 vendor/ethers 与 js/data/* 之前）
+/* Agentic Chain · 站点配置（同步加载，必须排在 vendor/ethers 与 js/data/* 之前）
    发射前所有合约地址都是 "0x0"：BAC.LIVE = isAddr(addresses.vault) 为 false，
    页面上每一个链上数字都显示「发射后公布」，不许出现任何演示值。
    发射当天只改这一个文件（写入 token / vault / 各合约地址 + flapUrl），然后重新部署。 */
@@ -15,7 +15,7 @@ window.BAC_CONFIG = Object.assign({
   logRpcs: ['https://bsc-rpc.publicnode.com'],
   explorer: 'https://bscscan.com',
 
-  /* ── 层内（BNB Agent Chain）──────────────────────────── */
+  /* ── 层内（Agentic Chain）──────────────────────────── */
   layerChainId: 56777,
   layerRpc: 'https://bnbagentchain-rpc.xyz/rpc',
   // 域名失效/被劫持时的兜底：永久保留，任何人都能用它独立核对这条链

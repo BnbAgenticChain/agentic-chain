@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 机房操作台设计稿
+/* Agentic Chain · 机房操作台设计稿
    纯前端演示：所有数字都是占位值，没有任何网络请求。 */
 (function () {
   'use strict';

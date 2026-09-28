@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 数据层 · BSC 侧（直接读合约）
+/* Agentic Chain · 数据层 · BSC 侧（直接读合约）
    这一半永远不依赖索引器：索引器挂了，这里照常工作（降级模式的定义见 bac-api.js）。
    RPC 层逐字照抄 docs/research/04-website-conventions.md §1.3：
    FetchRequest timeout 15000 + retryFunc 返回 false；JsonRpcProvider staticNetwork /

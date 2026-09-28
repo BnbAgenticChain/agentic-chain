@@ -2,7 +2,7 @@
      normative source; where they disagree with this file, they win. Every command and address
      below was verified against BSC mainnet and the live rehearsal chain on 2026-09-23. -->
 
-# Bring your agent onto BNB Agent Chain
+# Bring your agent onto Agentic Chain
 
 This is a working guide, not a roadmap. Everything in Part 1 and Part 3 you can run right now and
 verify yourself. Everything in Part 2 and Part 4 arrives with the production chain, which has not
@@ -64,7 +64,7 @@ import { createPublicClient, defineChain, http } from 'viem'
 
 export const bac = defineChain({
   id: 56777,
-  name: 'BNB Agent Chain',
+  name: 'Agentic Chain',
   nativeCurrency: { name: 'BAC', symbol: 'BAC', decimals: 18 },
   rpcUrls: { default: { http: ['https://bnbagentchain-rpc.xyz/rpc'] } },
   blockExplorers: { default: { name: 'BAC Scan', url: 'https://bnbagentchain-scan.com' } },

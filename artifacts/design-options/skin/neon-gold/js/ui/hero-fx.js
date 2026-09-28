@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 首屏金色粒子网格
+/* Agentic Chain · 首屏金色粒子网格
    纯 canvas，无库、无网络请求。只画在 #heroFx 上，数据表里不放任何动画。
    规则：离开视口就停、prefers-reduced-motion 就不画、只用 requestAnimationFrame。 */
 (function (root) {

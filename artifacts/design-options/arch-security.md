@@ -1,4 +1,4 @@
-# BNB Agent Chain 架构方案 · 安全优先（arch-security）
+# Agentic Chain 架构方案 · 安全优先（arch-security）
 
 2026-09-22。视角：安全与可审计优先。用户已拍板的 9 条决策不改；Flap 规则 001–010 不可谈判。本文是设计文档，不含代码文件。
 
@@ -42,7 +42,7 @@
             └ 写 BSC: ChainAnchor.postAnchor(...)   ← 唯一的出口方向权力
    indexer(SQLite) ─▶ caddy ─▶ https://95-179-183-132.sslip.io  /rpc /api /snapshot
 
-============ LAYER · BNB Agent Chain (chainId 56777, Clique period 3) ============
+============= LAYER · Agentic Chain (chainId 56777, Clique period 3) =============
  0x…0101 L2Bridge  创世持有 1e9×1e18 全部未发行余额；credit(msg,sig)→agentWallet；exit()→托管
  0x…0102 L2Gate    AgentRegistry 状态镜像，isAdmitted(addr)
  0x…0103 AnnounceBoard  publish(kind,contentHash,uri)，收费烧进 FeeSink

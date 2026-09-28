@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 数据层 · 核心（配置 / 常量 / 格式化 / 事件总线 / 状态骨架）
+/* Agentic Chain · 数据层 · 核心（配置 / 常量 / 格式化 / 事件总线 / 状态骨架）
    规矩（docs/research/04-website-conventions.md §1.1）：
    - js/data/* 是唯一碰链的代码，暴露 window.BAC，**里面没有任何 DOM 代码**；
    - 绑定层（js/ui/bind.js，不属于本轮）是 window.BAC 的唯一消费者；

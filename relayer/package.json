@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "BNB Agent Chain 官方中继：BSC <-> 层内（03-INTERFACES.md §1 的逐字实现）",
+  "description": "Agentic Chain 官方中继：BSC <-> 层内（03-INTERFACES.md §1 的逐字实现）",
   "engines": {
     "node": ">=22.13.0"
   },

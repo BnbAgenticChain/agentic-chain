@@ -15,7 +15,7 @@ const logo = await readFile(resolve(assets, 'logo-512.png'));
 const logoHash = createHash('sha256').update(logo).digest('hex');
 const logoData = `data:image/png;base64,${logo.toString('base64')}`;
 const bannerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500">
-<title>BNB AGENT CHAIN</title>
+<title>AGENTIC CHAIN</title>
 <desc>Gold and navy typography on warm white, with the original Agent Companion mark in a restrained network.</desc>
 <defs>
   <style>text{font-family:Arial,'Liberation Sans',sans-serif;font-weight:700}</style>
@@ -62,7 +62,7 @@ try {
   const banner = await readFile(resolve(assets, 'banner-1500x500.png'));
   const bannerData = `data:image/png;base64,${banner.toString('base64')}`;
   await page.setViewportSize({ width: 1120, height: 720 });
-  await page.setContent(`<!doctype html><html><style>*{box-sizing:border-box}body{margin:0;padding:32px 40px;background:#e9edf1;font-family:Arial,sans-serif;color:#081d35}.card{background:#fff;border:1px solid #dce3e8;border-radius:16px;overflow:hidden}.cover{width:100%;display:block}.profile{height:170px;padding:78px 32px 20px;position:relative}.avatar{position:absolute;left:30px;top:-69px;width:132px;height:132px;border:5px solid white;border-radius:50%;background:#081d35}.name{font-weight:700;font-size:24px}.handle{font-size:15px;color:#6b7d8e;margin-top:6px}.label{font-size:12px;color:#617587;letter-spacing:1px;margin:24px 0 12px}.small{width:600px;display:block;border:1px solid #dce3e8;border-radius:8px}</style><div class="card"><img class="cover" src="${bannerData}"><div class="profile"><img class="avatar" src="${logoData}"><div class="name">BNB AGENT CHAIN</div><div class="handle">Profile crop preview</div></div></div><div class="label">COMPACT DISPLAY · 600 × 200</div><img class="small" src="${bannerData}"></html>`);
+  await page.setContent(`<!doctype html><html><style>*{box-sizing:border-box}body{margin:0;padding:32px 40px;background:#e9edf1;font-family:Arial,sans-serif;color:#081d35}.card{background:#fff;border:1px solid #dce3e8;border-radius:16px;overflow:hidden}.cover{width:100%;display:block}.profile{height:170px;padding:78px 32px 20px;position:relative}.avatar{position:absolute;left:30px;top:-69px;width:132px;height:132px;border:5px solid white;border-radius:50%;background:#081d35}.name{font-weight:700;font-size:24px}.handle{font-size:15px;color:#6b7d8e;margin-top:6px}.label{font-size:12px;color:#617587;letter-spacing:1px;margin:24px 0 12px}.small{width:600px;display:block;border:1px solid #dce3e8;border-radius:8px}</style><div class="card"><img class="cover" src="${bannerData}"><div class="profile"><img class="avatar" src="${logoData}"><div class="name">AGENTIC CHAIN</div><div class="handle">Profile crop preview</div></div></div><div class="label">COMPACT DISPLAY · 600 × 200</div><img class="small" src="${bannerData}"></html>`);
   await page.screenshot({ path: resolve(here, 'banner-preview.png'), fullPage: true });
   console.log(JSON.stringify({ width: banner.readUInt32BE(16), height: banner.readUInt32BE(20), logoSha256: logoHash, logoUnchanged: logoHash === createHash('sha256').update(await readFile(resolve(assets, 'logo-512.png'))).digest('hex'), output: resolve(assets, 'banner-1500x500.png') }, null, 2));
 } finally { await browser.close(); }

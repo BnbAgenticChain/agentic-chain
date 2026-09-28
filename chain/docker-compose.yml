@@ -1,4 +1,4 @@
-# chain/docker-compose.yml - the production stack for the real BNB Agent Chain layer.
+# chain/docker-compose.yml - the production stack for the real Agentic Chain layer.
 #
 # Deploy target: /opt/bac/docker-compose.yml on the launch server.  Bring-up, health checks,
 # backups and rollback are in chain/OPERATIONS.md; the design behind each flag is in

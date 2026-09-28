@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// bac-node：BNB Agent Chain 见证人节点程序。
+// bac-node：Agentic Chain 见证人节点程序。
 // 只做一件事：让一个只会 Docker 的人，把只读全节点跑起来、每纪元诚实见证、领到该领的钱。
 
 import { pathToFileURL } from 'node:url';
 import { makeLogger, redact, BacError } from './util.mjs';
 
-export const USAGE = `bac-node —— BNB Agent Chain 见证人节点程序
+export const USAGE = `bac-node —— Agentic Chain 见证人节点程序
 
 用法：bac-node <命令> [选项]
 

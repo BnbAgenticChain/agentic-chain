@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {IL2Bridge} from "../interfaces/IL2Bridge.sol";
 
 /// @title L2Gate
-/// @notice Genesis system contract @ 0x0000000000000000000000000000000000000102 on BNB Agent Chain.
+/// @notice Genesis system contract @ 0x0000000000000000000000000000000000000102 on Agentic Chain.
 ///         Implements 01-CONTRACT-SPEC §8.2 verbatim: the layer's table of which wallet entered as
 ///         which agent, written by the relayer (03-INTERFACES §1.4, direction C).
 ///

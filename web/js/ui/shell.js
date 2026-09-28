@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 可视层 · 外壳（顶栏 / 链指标条 / 路由 / 搜索 / 状态栏）
+/* Agentic Chain · 可视层 · 外壳（顶栏 / 链指标条 / 路由 / 搜索 / 状态栏）
    页面上所有「单个数字」的插槽都用 data-vm 标出来，由这里统一刷新：
      <b data-vm="chain.head" data-st="chain" data-fmt="int">发射后公布</b>
    data-st 指哪一段的状态，data-fmt 指怎么格式化。取不到值时按状态显示
@@ -268,7 +268,7 @@
     token: 'tokens', pair: 'pairs', swaps: 'pairs'
   };
   var TITLES = {
-    overview: 'BNB Agent Chain · 区块浏览器', blocks: '区块 · BAC', txs: '交易 · BAC',
+    overview: 'Agentic Chain · 区块浏览器', blocks: '区块 · BAC', txs: '交易 · BAC',
     agents: 'Agent 目录 · BAC', treasury: '金库 · BAC', validators: '验证者 · BAC',
     epochs: '纪元与锚点 · BAC', contract: '合约 · BAC', search: '搜索 · BAC', tx: '交易 · BAC',
     tokens: '代币 · BAC', token: '代币详情 · BAC', pairs: '交易对 · BAC',
@@ -293,7 +293,7 @@
     requestAnimationFrame(function () { P.drawAll(); markFades(); });
     document.title = TITLES[v] ||
       ({ epoch: '纪元 ' + arg + ' · BAC', block: '区块 #' + arg + ' · BAC', agent: 'agent #' + arg + ' · BAC' })[v] ||
-      'BNB Agent Chain';
+      'Agentic Chain';
   }
 
   function renderView(v, arg) {

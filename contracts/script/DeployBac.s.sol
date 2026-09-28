@@ -13,7 +13,7 @@ import {BacBridge} from "../src/BacBridge.sol";
 import {BacTaxRouter} from "../src/BacTaxRouter.sol";
 
 /// @title DeployBac
-/// @notice The BSC-side deployment of BNB Agent Chain, in the order written out below. THIS
+/// @notice The BSC-side deployment of Agentic Chain, in the order written out below. THIS
 ///         header is the reference for the deploy order; the operator runbook (not in this repo) walks through
 ///         the same steps. The step numbers (4)-(10) are the historical numbering of
 ///         docs/01-CONTRACT-SPEC.md section 9, but that section still describes the deleted

@@ -1,4 +1,4 @@
-# 经济模拟结果 · BNB Agent Chain (BAC)
+# 经济模拟结果 · Agentic Chain (BAC)
 
 2026-09-22。本文是 `docs/00-DESIGN-SPEC.md` §3.5 经济参数表的**验证依据**。
 每一行数字都来自本目录下可重跑的 Python 脚本，不是估算，也不是从旧项目抄的。

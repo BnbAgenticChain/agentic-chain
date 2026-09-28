@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 区块浏览器 · 方案三「分页式应用」
+/* Agentic Chain · 区块浏览器 · 方案三「分页式应用」
    纯前端演示：所有数字都是占位值，没有任何网络请求、没有任何外部依赖。
    正式站点的每一个字段都来自 docs/03-INTERFACES.md §3 定义的只读 HTTP API。 */
 (function () {
@@ -1312,12 +1312,12 @@
     if (shellEl) { shellEl.classList.remove('cond'); condOn = false; }
     requestAnimationFrame(function () { drawAll(); markFades(); });
     document.title = ({
-      overview: 'BNB Agent Chain · 区块浏览器', blocks: '区块 · BAC', txs: '交易 · BAC',
+      overview: 'Agentic Chain · 区块浏览器', blocks: '区块 · BAC', txs: '交易 · BAC',
       agents: 'Agent 目录 · BAC', treasury: '金库 · BAC', validators: '验证者 · BAC',
       epochs: '纪元与锚点 · BAC', epoch: '纪元 ' + arg + ' · BAC',
       block: '区块 #' + arg + ' · BAC', tx: '交易 · BAC', agent: 'agent #' + arg + ' · BAC',
       contract: '合约 · BAC', search: '搜索 · BAC'
-    })[v] || 'BNB Agent Chain';
+    })[v] || 'Agentic Chain';
   }
   window.addEventListener('hashchange', route);
 

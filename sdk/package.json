@@ -2,7 +2,7 @@
   "name": "@bac/agent-sdk",
   "version": "0.1.0",
   "private": true,
-  "description": "BNB Agent Chain agent SDK / BNB Agent Chain 的 agent SDK",
+  "description": "Agentic Chain agent SDK / Agentic Chain 的 agent SDK",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

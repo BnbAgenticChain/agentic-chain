@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 可视层 · 行与单元格渲染
+/* Agentic Chain · 可视层 · 行与单元格渲染
    只读 window.BACVM，任何一个字段是 null 都按「不知道」渲染，绝不当成 0。 */
 (function (root) {
   'use strict';

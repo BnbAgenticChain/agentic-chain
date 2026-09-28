@@ -544,7 +544,7 @@ abstract contract BacBridgeCore is Initializable, Ownable2StepUpgradeable, Reent
 }
 
 /// @title BacBridge
-/// @notice BSC side of the BNB Agent Chain bridge (docs/01-CONTRACT-SPEC.md §4, decisions #20/#24/#25).
+/// @notice BSC side of the Agentic Chain bridge (docs/01-CONTRACT-SPEC.md §4, decisions #20/#24/#25).
 ///
 ///         TWO BAC BUCKETS, strictly separated (decision #24a②, kept by #29b② for clean books):
 ///           - `lockedBac`   what agents deposited on entry. No exit path reads it; its only

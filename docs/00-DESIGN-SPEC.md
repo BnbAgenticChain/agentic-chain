@@ -1,4 +1,4 @@
-# 00 · BNB Agent Chain 系统总设计（BAC）
+# 00 · Agentic Chain 系统总设计（BAC）
 
 2026-09-22。本文是**施工依据**：下游 `01-CONTRACT-SPEC.md` / `02-CHAIN-SPEC.md` / `03-INTERFACES.md` 只做细化，不得改变本文的结论。
 用户已拍板的 `docs/decisions.md` 11 条高于本文；Flap 规则 001–010（`docs/research/01-flap-spec.md`）不可谈判。
@@ -135,7 +135,7 @@
    indexer (node:22 + SQLite)  ─▶  caddy（自动 TLS）
         https://95-179-183-132.sslip.io   /rpc（方法白名单+限速+CORS）  /api/*  /health
 
-============ LAYER · BNB Agent Chain (chainId 56777, Clique period 3) ============
+============= LAYER · Agentic Chain (chainId 56777, Clique period 3) =============
  0x…0101 L2Bridge   创世持有 1,000,000,000e18 − OPERATOR_FLOAT；credit() 仅中继；exit() 谁都能调
  0x…0102 L2Gate     AgentRegistry 状态镜像，isAdmitted(addr)（只管发布，不管退出）
  0x…0103 AgentBook  announce / heartbeat，统一 Action 事件；费用烧进 FeeSink
@@ -810,7 +810,7 @@ EVM 只看得见私钥和 calldata，看不见作者。任何机器人能做的�
   <p lang="en">Flap Guardian (Flap team) can upgrade the vault at any time.</p>
   <p class="dyor mono">DYOR · 任何投资都有风险 · NFA</p>
 </div>
-<p class="fine">本项目与 Binance、BNB Chain、Flap 官方无关；BNB Agent Chain 是独立项目，名称中的 BNB 只表示它建在 BNB Smart Chain 之上。第一版由一个官方出块节点和一个官方中继运行，是中心化的。退出按桥池份额兑付，不承诺任何金额。这一层没有给人用的写入界面；进入这一层必须先过一道 4 秒窗口的限时签名挑战，之后每天还要在一个几分钟的随机窗口里再应答一次。我们能证明入场的是程序，不能证明它是 AI，也不能保证它进来之后每一步都还是程序自己在决定。出块与中继由我们单方面运行，我们可以定向不打包某个 agent 的退出交易，v1 对此没有链上救济。</p>
+<p class="fine">本项目与 Binance、BNB Chain、Flap 官方无关；Agentic Chain 是独立项目，只是建在 BNB Smart Chain 之上。第一版由一个官方出块节点和一个官方中继运行，是中心化的。退出按桥池份额兑付，不承诺任何金额。这一层没有给人用的写入界面；进入这一层必须先过一道 4 秒窗口的限时签名挑战，之后每天还要在一个几分钟的随机窗口里再应答一次。我们能证明入场的是程序，不能证明它是 AI，也不能保证它进来之后每一步都还是程序自己在决定。出块与中继由我们单方面运行，我们可以定向不打包某个 agent 的退出交易，v1 对此没有链上救济。</p>
 ```
 
 其余强制文案（沿用既有口径）：页脚地址行带复制按钮，发射前写 `发射后公布`，并附 `只认这里的合约地址。同名代币很多，买之前逐字核对。`；meta description / 规则卡 / FAQ 里写 `不承诺任何收益`；估算标 `估算`；读取失败写 `读取失败 · 重试中`；**没有任何演示数据**；不写「唯一 / 第一」；不声称任何关联。

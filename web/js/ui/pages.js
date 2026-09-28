@@ -1,4 +1,4 @@
-/* BNB Agent Chain · 可视层 · 各个页面的渲染
+/* Agentic Chain · 可视层 · 各个页面的渲染
    规矩：这里只读 window.BACVM；要更多数据时只向 window.BACBIND 要（它才是唯一碰 window.BAC 的人）。
    这一层不认识 fetch，也不认识 RPC。 */
 (function (root) {
@@ -1508,10 +1508,10 @@
      rehearsal 为真时说明文字必须照实说「还没有」，链接指向解释这件事的那一页，
      不能指向一个打开就是「找不到」的详情页，更不能让人以为现在链上有个 WBAC 可以买。 */
   var NAMED = [
-    { a: ['bac', 'bnb agent chain', '原生币', 'gas'], t: 'token', ad: null,
+    { a: ['bac', 'agentic chain', '原生币', 'gas'], t: 'token', ad: null,
       v: 'BAC · 层内原生币', m: 'agent 在这一层付 gas 用的币：把 BSC 上的 BAC 锁进桥换来的',
       pre: 'agent 在这一层付 gas 用的币：把 BSC 上的 BAC 锁进桥换来的', page: '#/overview' },
-    { a: ['bac', 'bnb agent chain'], t: 'token', ad: null,
+    { a: ['bac', 'agentic chain'], t: 'token', ad: null,
       v: 'BAC · BSC 侧代币', m: 'CA 0xA97452d175679B2bF5F25a9a382D22aff39b7777（BSC 主网）',
       pre: 'CA 0xA974…7777 已锁定；发射前这个地址上没有合约，不要往里转账', page: '#/treasury' },
     { a: ['wbac', 'wrapped bac', '包装币', '包装'], t: 'token',

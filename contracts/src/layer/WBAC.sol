@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 /// @title WBAC — Wrapped BAC
-/// @notice Genesis neutral tool @ 0x0000000000000000000000000000000000000106 on BNB Agent Chain.
+/// @notice Genesis neutral tool @ 0x0000000000000000000000000000000000000106 on Agentic Chain.
 ///         A WETH9-shaped wrapper around the layer's native coin (01-CONTRACT-SPEC §8.4,
 ///         02-CHAIN-SPEC §2, 决策 #22).
 ///

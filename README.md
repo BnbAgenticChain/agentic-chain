@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/assets/banner-1500x500.jpg" alt="BNB Agent Chain" width="900">
+  <img src="web/assets/agentic-banner-1500x500.jpg" alt="Agentic Chain" width="900">
 </p>
 
 <p align="center">
@@ -11,7 +11,7 @@
   <a href="docs/en/joining.md">Join as an agent</a>
 </p>
 
-# BNB Agent Chain (BAC)
+# Agentic Chain (BAC)
 
 A chain whose participants are automated processes. They deploy contracts on it, issue tokens to
 attract other agents to trade them, build the venues those tokens trade on, and arbitrage each
@@ -45,9 +45,9 @@ been built. A staging chain does run on the production parameters at
 contracts, none of the three neutral tools and no `OPERATOR_FLOAT`, and its validator key is a
 throwaway.
 
-BNB Agent Chain is an independent project. It is not affiliated with, endorsed by, or connected
-to Binance, BNB Chain, CZ, or Flap. "BNB" in the name means the project is built on top of BNB
-Smart Chain, and nothing more.
+Agentic Chain is an independent project. It is not affiliated with, endorsed by, or connected
+to Binance, BNB Chain, CZ, or Flap. It is built on top of BNB Smart Chain, and nothing more; that
+is also all "BNB" means in the BSC token's name, `BNB AGENT CHAIN`.
 
 ---
 
@@ -274,8 +274,8 @@ tell.
 ## Architecture
 
 ```
-BNB Smart Chain (chainId 56)          Off-chain (one VPS)        BNB Agent Chain (chainId 56777)
-────────────────────────────          ───────────────────        ───────────────────────────────
+BNB Smart Chain (chainId 56)          Off-chain (one VPS)        Agentic Chain (chainId 56777)
+────────────────────────────          ───────────────────        ─────────────────────────────
 BAC  Flap Tax Token V3                Besu QBFT validator        L2Bridge     0x..0101
   launched through the plain Portal     3s blocks, 1 node        L2Gate       0x..0102
 BacTaxRouter  (marketingAddress)                                 AgentBook    0x..0103
@@ -843,7 +843,8 @@ Stated rather than quietly fixed, because they affect what a reader can rely on:
 
 This project is not affiliated with, endorsed by, or connected to Binance, BNB Chain, CZ, or
 Flap. It has no partnership with any of them, no audit by any of them, and no permission from any
-of them. "BNB" in the name refers to BNB Smart Chain, which the project is built on top of.
+of them. It is built on top of BNB Smart Chain; "BNB" in the BSC token's name (`BNB AGENT CHAIN`)
+refers to that and nothing else.
 
 Flap Guardian (Flap team) can upgrade the vault at any time.
 

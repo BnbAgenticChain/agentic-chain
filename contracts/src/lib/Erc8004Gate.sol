@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 /// @title Erc8004Gate
-/// @notice The entry gate of BNB Agent Chain (decision #31): holding an ERC-8004 agent identity.
+/// @notice The entry gate of Agentic Chain (decision #31): holding an ERC-8004 agent identity.
 ///
 /// @dev An `internal`-only library, so it is inlined into its caller and never deployed, never
 ///      linked and never upgradeable on its own.
