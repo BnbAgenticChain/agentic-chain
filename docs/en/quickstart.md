@@ -4,11 +4,10 @@
 
 # Bring your agent onto Agentic Chain
 
-> **Status, 2026-09-28.** The rehearsal chain described in Part 0 is stopped, the BSC-side
-> contracts are being redeployed, and AGNT has not launched. The network details in Part 1 are the
-> production chain's (chainId 60606); nothing answers on them until launch. Contract and token
-> addresses are published in the README's Status section at launch — do not send anything before
-> then.
+> **Status, 2026-09-28.** The rehearsal chain described in Part 0 is stopped. The BSC-side
+> contracts were redeployed on 2026-09-28 (addresses in Part 2), and AGNT has not launched. The
+> network details in Part 1 are the production chain's (chainId 60606); nothing answers on them
+> until launch.
 
 This is a working guide, not a roadmap. Part 1 and Part 3 work once the production chain is live;
 Part 2 and Part 4 arrive with the launch.
@@ -24,7 +23,7 @@ sync a node against it. It was never the product:
 | Blocks, RPC, P2P | Yes | Yes |
 | System contracts in genesis | **None** | L2Bridge, L2Gate, AgentBook, FeeSplitter, WAGNT |
 | Multicall3 / CREATE2 deployer | **Not preloaded** | Preloaded |
-| BSC-side contracts | Deployed 2026-09-23, **being redeployed** | The redeployed contracts |
+| BSC-side contracts | **Deployed 2026-09-28**, readable now | Same contracts |
 | Bridge in from BSC | **Not yet** — the token has not launched, so there is no AGNT to lock | Yes, gated on ERC-8004 |
 | Native coin | A public test balance, no value | AGNT bridged 1:1 from BSC |
 | Data | Wiped whenever we want | Permanent |
@@ -100,21 +99,24 @@ to gate, because there is nothing of value.
 > A step-by-step version of just this part, from minting an identity to leaving again, is in
 > [joining.md](joining.md).
 
-**The BSC-side contracts are being redeployed, and AGNT has not launched.** Their addresses are
-published in the README's Status section at launch, after they are read back off the chain. Any
-address presented as the AGNT token or this project's bridge before then is not this project.
+**The BSC-side contracts are deployed.** They went out on 2026-09-28 from block 124,472,102, and you
+can read every one of them right now:
 
 | Contract | Address |
 |---|---|
-| `BacBridge` (UUPS proxy), `BacTaxRouter`, `BacNodeFund`, `ChainAnchor`, `ValidatorStaking` | Published at launch |
+| `BacBridge` (ERC-1967 proxy — always use this address) | `0x1247826184ADD722862E814F58193d81B22A41d1` |
+| `BacTaxRouter` | `0x2550d09ee58589a9a79D5999B56F2B5674e87746` |
+| `BacNodeFund` | `0xFcaafA5C8FF14da484bC41e269a340ED7E03fF24` |
+| `ChainAnchor` | `0x91e829a8B3d658ff4f51876B62126379cBb609d9` |
+| `ValidatorStaking` | `0xDBE12DFE1cC9F51b65d43ff62c232fBED3468104` |
 | ERC-8004 Identity Registry (not ours) | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` |
-| AGNT token | Published at launch |
+| AGNT token | `0xC396dF2ed18837DF07A58F7cc407217CEF807777` — **salt locked, not launched: `eth_getCode` is empty** |
 
-Once the bridge address is published, read the wiring and the constants off it:
+What you can do today: read the wiring and the constants off the live bridge.
 
 ```bash
 R=https://bsc-dataseed.bnbchain.org
-B=<bridge address, published at launch>
+B=0x1247826184ADD722862E814F58193d81B22A41d1
 
 cast call $B "identityRegistry()(address)" --rpc-url $R   # 0x8004A1..a432
 cast call $B "EPOCH()(uint64)"             --rpc-url $R   # 600

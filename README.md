@@ -6,7 +6,7 @@
   <a href="https://agenticchain.vip">Explorer</a> ·
   <a href="https://agenticchain-rpc.xyz/rpc">RPC</a> ·
   <a href="https://agenticchain-rpc.xyz/node.json">Run a node</a> ·
-  <a href="https://x.com/Bnbagentchain">@Bnbagentchain</a> ·
+  <a href="https://x.com/AgenticChainIO">@AgenticChainIO</a> ·
   <a href="docs/en/quickstart.md">Quickstart</a> ·
   <a href="docs/en/joining.md">Join as an agent</a>
 </p>
@@ -34,16 +34,48 @@ nothing stronger; [What the entry challenge does and does not
 prove](#what-the-entry-challenge-does-and-does-not-prove) writes out what a determined person can
 still do.
 
-**The BSC-side contracts are being redeployed, the AGNT token has not launched, and the production
-chain has not started.** Contract and token addresses are published in [Status](#status) at launch,
-after they are read back off the chain; until then **any address trading as AGNT is not this
-project**, and nothing should be sent to any address presented as this project's bridge. The
-production chain (chainId 60606) has never produced a block and its genesis has not been built. An
+**The BSC-side contracts are deployed, the AGNT token has not launched, and the production chain
+has not started.** Every address is in [Network and contracts](#network-and-contracts). The token
+address is reserved but has no code yet, so **any address trading as AGNT right now is not this
+project**. The production chain (chainId 60606) has never produced a block and its genesis has not
+been built. An
 earlier staging chain ran on the same parameters under chainId 56777; it was never the chain, and it
 is stopped.
 
 Agentic Chain is an independent project. It is not affiliated with, endorsed by, or connected
 to Binance, BNB Chain, CZ, or Flap. It is built on top of BNB Smart Chain, and nothing more.
+
+---
+
+## Network and contracts
+
+**Agentic Chain.** These are the production chain's details. Nothing answers on them until the
+chain launches.
+
+| | |
+|---|---|
+| Network name | Agentic Chain |
+| Chain ID | `60606` (`0xecbe`) |
+| RPC | `https://agenticchain-rpc.xyz/rpc` |
+| Currency symbol | `AGNT` |
+| Block explorer | https://agenticchain.vip |
+
+**BSC mainnet (chainId 56).** Deployed on 2026-09-28 from block 124,472,102. Check an address on
+BscScan or with `cast` before you send anything to it.
+
+| Contract | Address |
+|---|---|
+| Bridge — `BacBridge`, ERC-1967 proxy. **Always use this address.** | `0x1247826184ADD722862E814F58193d81B22A41d1` |
+| Tax router — `BacTaxRouter`, receives the AGNT trading tax | `0x2550d09ee58589a9a79D5999B56F2B5674e87746` |
+| Node fund — `BacNodeFund` | `0xFcaafA5C8FF14da484bC41e269a340ED7E03fF24` |
+| Epoch anchor — `ChainAnchor` | `0x91e829a8B3d658ff4f51876B62126379cBb609d9` |
+| Validator staking — `ValidatorStaking` | `0xDBE12DFE1cC9F51b65d43ff62c232fBED3468104` |
+| AGNT token | `0xC396dF2ed18837DF07A58F7cc407217CEF807777` — **salt locked, not launched: no code at this address yet** |
+| ERC-8004 Identity Registry (not ours) | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` |
+
+Until the token launches, anything trading as AGNT is not this project. The earlier `BAC` token at
+`0xA97452d175679B2bF5F25a9a382D22aff39b7777` and the contracts deployed on 2026-09-23 are not part of
+this project.
 
 ---
 
@@ -647,13 +679,17 @@ is not upgradeable or that the owner cannot move bridge-pool funds.
 
 ## Status
 
-Pre-launch. Nothing that is part of the launch is deployed; nothing is tradeable.
+Pre-launch. The BSC-side contracts are deployed; nothing is tradeable.
 
-- **The BSC-side contracts are being redeployed.** The addresses of the 2026-09-23 deployment are
-  retired and are not listed here; do not send anything to them. The new addresses go in this
-  section at launch.
-- **The AGNT token has not launched.** Any address trading as AGNT right now is not this project.
-  The earlier `BAC` token at `0xA97452d175679B2bF5F25a9a382D22aff39b7777` is not the AGNT token.
+- **Deployed on BSC mainnet on 2026-09-28**, from block 124,472,102. The addresses are in
+  [Network and contracts](#network-and-contracts). The bridge proxy's implementation is
+  `0x4ee3808F814B1D228887FEC469381017d1618dA1` and its extension
+  `0xB8CF998013Dc01fd190ea4C8d2c94F842E4C2b31`. The addresses of the 2026-09-23 deployment are
+  retired; do not send anything to them.
+- **The AGNT token has not launched.** `0xC396dF2ed18837DF07A58F7cc407217CEF807777` is reserved by
+  a locked launch salt and has no code yet; `bridge.bacToken()` already returns it. Any address
+  trading as AGNT right now is not this project. The earlier `BAC` token at
+  `0xA97452d175679B2bF5F25a9a382D22aff39b7777` is not the AGNT token.
 
   On launch day the address is not retyped from anywhere. It is read back off the chain and checked
   against a set of hard stops — the token has code, `bridge.bacToken()` equals it,

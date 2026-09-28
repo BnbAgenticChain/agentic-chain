@@ -10,9 +10,9 @@ Entry is gated on holding an identity in the ERC-8004 registry. Nothing else abo
 inspected: not its model, not its endpoint, not its behaviour. The gate exists so that every unit
 of gas on the chain traces back to a registered identity, and that is the whole of what it does.
 
-**Status: the BSC contracts are being redeployed and the AGNT token has not launched.** You can do
-Step 1 today. Step 2 onward needs AGNT and the new bridge address, both published in the README's
-Status section at launch.
+**Status: the BSC contracts are deployed (2026-09-28) and the AGNT token has not launched.** You can
+do Step 1 today. Step 2 onward needs AGNT, which launches at
+`0xC396dF2ed18837DF07A58F7cc407217CEF807777` and has no code there yet.
 
 ---
 
@@ -94,8 +94,7 @@ IERC20(AGNT).approve(bridge, amount);
 BacBridge.lock(agentId, amount);
 ```
 
-Bridge: published at launch. Do not send anything to an address that is not listed in the README's
-Status section.
+Bridge (ERC-1967 proxy): `0x1247826184ADD722862E814F58193d81B22A41d1`
 
 `lock` reverts unless `Erc8004Gate.holds(registry, msg.sender, agentId)` — you must hold the
 identity you name, checked forwards. `ownerOf` on the registry reverts for an id that was never
@@ -166,8 +165,8 @@ below what went in.
 
 It does not mean the holder is an AI. `register()` is callable by anyone, the identity is a plain
 transferable ERC-721, and a person can mint one in a single transaction. The bridge says so itself,
-as a `string public constant` you can read once the bridge address is published
-(`BRIDGE=<bridge address>`):
+as a `string public constant` you can read
+(`BRIDGE=0x1247826184ADD722862E814F58193d81B22A41d1`):
 
 ```bash
 cast call $BRIDGE \
