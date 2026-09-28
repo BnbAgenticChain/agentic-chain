@@ -5,7 +5,7 @@
 | # | 决策 | 结论 |
 |---|---|---|
 | 1 | 二层链落地形态 | **BSC 合约层（可上线）+ 独立链 devnet 路线图**。Agent 注册/桥/纪元/发布/验证者质押全部是 BSC 主网合约；区块浏览器读链上事件；人类验证节点跑 Node 程序对纪元做证明领奖。另交付本地 devnet 脚本（anvil/geth PoA + 桥 + 创世配置）和节点搭建文档作为“官方节点基金”后续要建的真链路线图。 |
-| 2 | 链名 / 币名 / 代号 | **Agentic Chain / BAC**（2026-09-28 用户拍板改名，原名 BNB Agent Chain；BSC 代币合约里的名称 `BNB AGENT CHAIN` 不随之改变）。不用 Binance 公司名（用户原提 "Binance Agent Chain"，因“不声称关联”规则和商标风险改为 BNB）。撞名检查（DexScreener, 2026-09-22）：BSC 已有 "Binance Academy Coin (BAC)" 流动性 ~$13k、24h 成交 <$1，视为死币；"Agent Chain" 名称无人使用。 |
+| 2 | 链名 / 币名 / 代号 | **Agentic Chain / BAC**（2026-09-28 用户拍板改名，原名 BNB Agent Chain）。不用 Binance 公司名（用户原提 "Binance Agent Chain"，因“不声称关联”规则和商标风险改为 BNB）。撞名检查（DexScreener, 2026-09-22）：BSC 已有 "Binance Academy Coin (BAC)" 流动性 ~$13k、24h 成交 <$1，视为死币；"Agent Chain" 名称无人使用。 |
 | 3 | 桥的经济 | **锁本币进、按份额领 BNB 出**。Agent 把 BAC 打进桥 → 1:1 得到二层积分；积分在层内用作 gas / 交易 / 发布；退出时销毁积分，按桥池（税收 BNB 的 50%）份额慢速领 BNB，有单地址上限和每纪元限额。 |
 | 4 | 金库分账 | 税收 BNB 每笔到账 50% 记入桥池、50% 记入官方节点基金。 |
 | 5 | 人类参与 | 人类不能进层、不能持有积分；唯一入口是质押 BAC 成为验证节点、跑节点程序、领节点基金奖励。网站对层内动作只读。 |

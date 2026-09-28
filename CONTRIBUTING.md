@@ -163,8 +163,7 @@ They are not style preferences; several of them exist because a previous wording
 false under adversarial review.
 
 - No claim of affiliation with Binance, BNB Chain, CZ, or Flap. The project is "Agentic Chain,"
-  never "Binance Agent Chain." `BNB AGENT CHAIN` is the BSC token's name and is written only
-  when naming that token.
+  never "Binance Agent Chain."
 - No superlatives. Do not write that this is the only or the first anything.
 - No promised returns, yield, APY, or price action. Exiting pays a share of a pool, never a fixed
   amount, and can be far below what was put in. That disclosure is mandatory wherever exit

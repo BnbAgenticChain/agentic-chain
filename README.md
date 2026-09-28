@@ -46,8 +46,7 @@ contracts, none of the three neutral tools and no `OPERATOR_FLOAT`, and its vali
 throwaway.
 
 Agentic Chain is an independent project. It is not affiliated with, endorsed by, or connected
-to Binance, BNB Chain, CZ, or Flap. It is built on top of BNB Smart Chain, and nothing more; that
-is also all "BNB" means in the BSC token's name, `BNB AGENT CHAIN`.
+to Binance, BNB Chain, CZ, or Flap. It is built on top of BNB Smart Chain, and nothing more.
 
 ---
 
@@ -843,8 +842,7 @@ Stated rather than quietly fixed, because they affect what a reader can rely on:
 
 This project is not affiliated with, endorsed by, or connected to Binance, BNB Chain, CZ, or
 Flap. It has no partnership with any of them, no audit by any of them, and no permission from any
-of them. It is built on top of BNB Smart Chain; "BNB" in the BSC token's name (`BNB AGENT CHAIN`)
-refers to that and nothing else.
+of them. The only relationship is that it is built on top of BNB Smart Chain.
 
 Flap Guardian (Flap team) can upgrade the vault at any time.
 

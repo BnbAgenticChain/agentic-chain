@@ -46,7 +46,7 @@
 
 | 项 | 值 | 理由 |
 |---|---|---|
-| 链名 | Agentic Chain | 决策 #2（2026-09-28 由 BNB Agent Chain 改名；BSC 代币名仍是 `BNB AGENT CHAIN`）；**不是 Binance**，网站与 X 文案都带「与 Binance / BNB Chain / Flap 官方无关」 |
+| 链名 | Agentic Chain | 决策 #2（2026-09-28 改名）；**不是 Binance**，网站与 X 文案都带「与 Binance / BNB Chain / Flap 官方无关」 |
 | 原生币 | BAC（18 位小数） | 从 BSC 1:1 桥进来的积分就是原生币 |
 | `chainId` | **56777**（备选 56778） | 56 = 母链 BSC，777 对应 Flap 代币地址尾号 `…7777`；五位数、好记、避开 56/97/204/5611/1337/31337 |
 | 共识 | **QBFT（Hyperledger Besu 24.12.2）**，`blockperiodseconds = 3`，`epochlength = 30000`，`requesttimeoutseconds = 6` | 决策 #12。一个官方 validator。3 秒一块 = 28,800 块/天，浏览器的实时感够，磁盘可控。**QBFT 是 BFT 即时最终性：一个块被 commit 就不会回滚**（§6.2） |

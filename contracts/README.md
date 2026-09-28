@@ -1,6 +1,6 @@
 # Agentic Chain — contracts
 
-Solidity sources for **Agentic Chain** (BSC token `BNB AGENT CHAIN` / `BAC`), v2 architecture
+Solidity sources for **Agentic Chain**, v2 architecture
 (decisions #29–#35, 2026-09-23).
 
 `../docs/decisions.md` is the authority: later rows override earlier ones, and it overrides every
