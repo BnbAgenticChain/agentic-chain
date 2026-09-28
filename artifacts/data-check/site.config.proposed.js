@@ -61,6 +61,6 @@ window.BAC_CONFIG = Object.assign({
   /* ── 站点链接（发射后填）────────────────────────────── */
   flapUrl: '',
   x: 'https://x.com/Bnbagentchain',
-  github: 'https://github.com/AgenticChain/agentic-chain',
+  github: 'https://github.com/BnbAgenticChain/agentic-chain',
   siteUrl: 'https://bnbagentchain-scan.com'
 }, window.BAC_CONFIG || {});

@@ -10,6 +10,6 @@ for (const [w,h,n] of [[1440,900,'desk'],[390,844,'mob']]) {
   const ov = await p.evaluate(()=>document.documentElement.scrollWidth - innerWidth);
   await p.screenshot({ path:`out/social-${n}-top.png`, clip:{x:0,y:0,width:w,height: n==='mob'?260:120} });
   const f = await p.$('.f-top'); await f.scrollIntoViewIfNeeded(); await f.screenshot({ path:`out/social-${n}-foot.png` });
-  console.log(n,'horizontal overflow px:',ov, 'links:', await p.$$eval('a[href*="x.com/Bnbagentchain"],a[href*="github.com/AgenticChain"]', a=>a.length));
+  console.log(n,'horizontal overflow px:',ov, 'links:', await p.$$eval('a[href*="x.com/Bnbagentchain"],a[href*="github.com/BnbAgenticChain"]', a=>a.length));
 }
 await b.close(); srv.close();
